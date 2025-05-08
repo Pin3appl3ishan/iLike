@@ -12,7 +12,7 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
-
+node_modules/ 
 # IntelliJ related
 *.iml
 *.ipr
