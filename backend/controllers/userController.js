@@ -92,3 +92,30 @@ exports.getAllUsers = async (req, res) => {
     res.status(500).json({ error: "Error fetching users" });
   }
 };
+
+exports.likeUser = async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.userId); // assuming req.userId is available in req.user.id
+    const likedUser = await User.findById(req.params.id);
+
+    if (!likedUser) return res.status(404).json({ message: "User not found" });
+
+    if (currentUser.likes.includes(likedUser._id)) {
+      return res.status(400).json({ message: "You already liked this user" });
+    }
+
+    currentUser.likes.push(likedUser._id);
+
+    likedUser.followers.push(currentUser._id);
+
+    await currentUser.save();
+    await likedUser.save();
+
+    res.status(200).json({
+      message: "User liked successfully",
+    });
+  } catch (error) {
+    console.error("🔥 Error in likeUser:", error.message);
+    res.status(500).json({ error: "Error liking user" });
+  }
+};
