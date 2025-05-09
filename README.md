@@ -6,11 +6,24 @@ A new Flutter project.
 
 This project is a starting point for a Flutter application.
 
-A few resources to get you started if this is your first Flutter project:
+## Routes
+### ✅ **Auth Routes** (Already Done)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- `POST /register` – Register new user
+- `POST /login` – Authenticate and return JWT
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+---
+
+### 📄 **User Routes**
+
+1. `GET /user/:id` – Get a user's public profile (name, bio, avatar)
+2. `PUT /user/:id` – Update a user's profile (bio, avatar, name, etc.)
+3. `GET /users` – Get all users (can filter later for swipe feed)
+
+---
+
+### ❤️ **Interaction Routes**
+
+1. `POST /like/:id` – Like another user (id = liked user)
+2. `POST /dislike/:id` – Optional: Dislike (could skip for now)
+3. `GET /matches/:id` – Get all matched users (i.e., mutual likes)
