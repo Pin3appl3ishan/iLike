@@ -1,13 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const userController = require('../controllers/userController');
+const {register, login, getProfile, updateProfile, getAllUsers} = require('../controllers/userController');
 const verifyToken = require('../middleware/verifyToken');
 
-router.post('/register', userController.register);
-router.post('/login', userController.login);
+router.post('/register', register);
+router.post('/login', login);
 
 // Protected routes (requires valid token to access)
-router.get('/:id', verifyToken, userController.getProfile);
-router.put('/:id', verifyToken, userController.updateProfile);
+router.get('/profile/:id', verifyToken, getProfile);
+router.put('/profile/:id', verifyToken, updateProfile);
+
+router.get('/', verifyToken, getAllUsers);
 
 module.exports = router;
