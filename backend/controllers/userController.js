@@ -119,3 +119,25 @@ exports.likeUser = async (req, res) => {
     res.status(500).json({ error: "Error liking user" });
   }
 };
+
+exports.getMatches = async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.userId); // assuming req.userId is available in req.user.id
+
+    if (!currentUser) return res.status(404).json({ message: "User not found" });
+
+    const matchedUsers = await User.find({
+      _id: { $in: currentUser.likes }, // matches are mutual followers
+      likes: req.userId,
+    }).select("-password"); 
+
+    if (matchedUsers.length === 0) {
+      return res.status(404).json({ message: "No matches found" });
+    }
+
+    res.status(200).json(matchedUsers);
+  } catch (error) {
+    console.error("🔥 Error in getMatches:", error.message);
+    res.status(500).json({ error: "Error fetching matches" });
+  }
+};
