@@ -120,16 +120,51 @@ exports.likeUser = async (req, res) => {
   }
 };
 
+exports.dislikeUser = async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.userId); // assuming req.userId is available in req.user.id
+    const dislikedUser = await User.findById(req.params.id);
+
+    if (req.userId === req.params.id) {
+      return res.status(400).json({ message: "You can't dislike yourself" });
+    }
+
+    if (!dislikedUser)
+      return res.status(404).json({ message: "User not found" });
+
+    // remove the disliked user from current user's likes
+    currentUser.likes = currentUser.likes.filter(
+      (like) => like.toString() !== dislikedUser._id.toString()
+    );
+    
+    // remove the current user from disliked user's followers
+    dislikedUser.followers = dislikedUser.followers.filter(
+      (follower) => follower.toString() !== currentUser._id.toString()
+    );
+
+    await currentUser.save();
+    await dislikedUser.save();
+
+    res.status(200).json({
+      message: "User disliked successfully",
+    });
+  } catch (error) {
+    console.error("🔥 Error in dislikeUser:", error.message);
+    res.status(500).json({ error: "Error disliking user" });
+  }
+};
+
 exports.getMatches = async (req, res) => {
   try {
     const currentUser = await User.findById(req.userId); // assuming req.userId is available in req.user.id
 
-    if (!currentUser) return res.status(404).json({ message: "User not found" });
+    if (!currentUser)
+      return res.status(404).json({ message: "User not found" });
 
     const matchedUsers = await User.find({
       _id: { $in: currentUser.likes }, // matches are mutual followers
       likes: req.userId,
-    }).select("-password"); 
+    }).select("-password");
 
     if (matchedUsers.length === 0) {
       return res.status(404).json({ message: "No matches found" });
