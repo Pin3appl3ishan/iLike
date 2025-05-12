@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:ilike/views/login_screen.dart';
+import 'package:ilike/views/register_screen.dart';
 import 'views/splash_screen.dart';
 
 void main() {
@@ -17,6 +19,10 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.pink,
       ),
       home: const SplashScreen(),
+      routes: {
+        '/login': (context) => const LoginScreen(),
+        '/register': (context) => const RegisterScreen(),
+      },
     );
   }
 }
