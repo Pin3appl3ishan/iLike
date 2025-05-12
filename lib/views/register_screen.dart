@@ -1,67 +1,97 @@
 import 'package:flutter/material.dart';
 
-
 class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
+
   @override
-  _RegisterScreenState createState() => _RegisterScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _name = '';
-  String _email = '';
-  String _password = '';
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  void _submitForm() {
+    if (_formKey.currentState!.validate()) {
+      print("✅ Name: ${_nameController.text}");
+      print("✅ Email: ${_emailController.text}");
+      print("✅ Password: ${_passwordController.text}");
+
+      // TODO: Call backend register API
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Registering...')),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Register")),
+      appBar: AppBar(title: const Text("Register")),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
               TextFormField(
-                decoration: InputDecoration(labelText: "Name"),
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: "Name"),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your name';
+                  if (value == null || value.trim().isEmpty) {
+                    return "Please enter your name";
                   }
                   return null;
                 },
-                onSaved: (value) => _name = value!,
               ),
+              const SizedBox(height: 16),
               TextFormField(
-                decoration: InputDecoration(labelText: "Email"),
+                controller: _emailController,
+                decoration: const InputDecoration(labelText: "Email"),
+                keyboardType: TextInputType.emailAddress,
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter an email';
+                  if (value == null || value.trim().isEmpty) {
+                    return "Please enter your email";
+                  }
+                  if (!value.contains("@") || !value.contains(".")) {
+                    return "Enter a valid email address";
                   }
                   return null;
                 },
-                onSaved: (value) => _email = value!,
               ),
+              const SizedBox(height: 16),
               TextFormField(
+                controller: _passwordController,
+                decoration: const InputDecoration(labelText: "Password"),
                 obscureText: true,
-                decoration: InputDecoration(labelText: "Password"),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a password';
+                  if (value == null || value.length < 6) {
+                    return "Password must be at least 6 characters";
                   }
                   return null;
                 },
-                onSaved: (value) => _password = value!,
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 24),
               ElevatedButton(
+                onPressed: _submitForm,
+                child: const Text("Register"),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
                 onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    _formKey.currentState!.save();
-                    // Call API to register user
-                  }
+                  Navigator.pop(context); // Back to login
                 },
-                child: Text('Register'),
+                child: const Text("Already have an account? Login"),
               ),
             ],
           ),
