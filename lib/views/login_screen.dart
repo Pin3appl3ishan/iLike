@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ilike/services/api_service.dart';
+import 'package:ilike/views/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,24 +15,46 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  void _submitForm() {
+  final ApiService _apiService = ApiService();
+
+  bool _isLoading = false;
+
+  void _handleLogin() async {
     if (_formKey.currentState!.validate()) {
-      // If form is valid, proceed with backend login API call
-      print('✅ Email: ${_emailController.text}');
-      print('✅ Password: ${_passwordController.text}');
+      setState(() {
+        _isLoading = true;
+      });
 
-      // TODO: Add actual login API call and navigation
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Login successful')));
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+
+      try {
+        final response = await _apiService.post('/login', {
+          'email': email,
+          'password': password,
+        });
+
+        final token = response.data['token'];
+        final user = response.data['user'];
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', token);
+        await prefs.setString('user', user['_id']);
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Login failed. Please try again.')));
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
   }
 
   @override
@@ -43,6 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             children: [
               TextFormField(
+                controller: _emailController,
                 decoration: const InputDecoration(labelText: 'Email'),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
@@ -59,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
               TextFormField(
                 controller: _passwordController,
                 decoration: InputDecoration(labelText: 'Password'),
-                obscureText: true, 
+                obscureText: true,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return "Please enter your password";
@@ -71,14 +97,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
               ),
               const SizedBox(height: 24),
+              // TODO : Add a loading indicator
               ElevatedButton(
-                onPressed: _submitForm,
+                onPressed: _handleLogin,
                 child: const Text('Login'),
               ),
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () {
-                  // TODO: Navigate to Register Screen
                   Navigator.pushNamed(context, '/register');
                 },
                 child: const Text("Don't have an account? Register"),
