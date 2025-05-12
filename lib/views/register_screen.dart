@@ -1,4 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:ilike/services/api_service.dart';
+import 'package:ilike/views/home_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -9,29 +13,48 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _apiService = ApiService();
+
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  void _submitForm() {
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  void _registerUser() async {
     if (_formKey.currentState!.validate()) {
-      print("✅ Name: ${_nameController.text}");
-      print("✅ Email: ${_emailController.text}");
-      print("✅ Password: ${_passwordController.text}");
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
 
-      // TODO: Call backend register API
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Registering...')),
-      );
+      try {
+        final response = await _apiService.post('/auth/register', {
+          'name': _nameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'password': _passwordController.text.trim(),
+        });
+
+        // Save token and user ID to SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', response.data['token']);
+        await prefs.setString('user', response.data['user']['_id']);
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
+      } on DioException catch (e) {
+        setState(() {
+          _errorMessage = e.response?.data['message'] ?? "Registration failed";
+        });
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
   }
 
   @override
@@ -44,6 +67,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
           key: _formKey,
           child: Column(
             children: [
+              if (_errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: "Name"),
@@ -82,8 +113,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 },
               ),
               const SizedBox(height: 24),
+              // TODO: Add a loading indicator
               ElevatedButton(
-                onPressed: _submitForm,
+                onPressed: _registerUser,
                 child: const Text("Register"),
               ),
               const SizedBox(height: 16),
