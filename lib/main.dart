@@ -15,9 +15,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'iLike App',
-      theme: ThemeData(
-        primarySwatch: Colors.pink,
-      ),
+      theme: ThemeData(primarySwatch: Colors.pink),
       home: const SplashScreen(),
       routes: {
         '/login': (context) => const LoginScreen(),
