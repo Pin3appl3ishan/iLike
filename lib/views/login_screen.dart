@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ilike/services/api_service.dart';
 import 'package:ilike/views/home_screen.dart';
 
@@ -63,12 +63,17 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Container(
           margin: const EdgeInsets.all(24),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const SizedBox(height: 40),
               _header(),
+              const SizedBox(height: 40),
               _inputField(),
-              _forgotPassword(),
+              const SizedBox(height: 12),
+              Align(alignment: Alignment.center, child: _forgotPassword()),
+              const SizedBox(height: 20),
               _signup(context),
+              const SizedBox(height: 40),
             ],
           ),
         ),

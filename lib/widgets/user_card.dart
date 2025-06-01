@@ -31,16 +31,36 @@ class UserCard extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
+                  color: Colors.black87,
                 ),
               ),
-              Text(user.bio),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
+                child: Text(
+                  user.bio,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey[800]),
+                ),
+              ),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: const [
-                  CircleAvatar(child: Icon(Icons.close, color: Colors.red)),
-                  CircleAvatar(child: Icon(Icons.star, color: Colors.blue)),
-                  CircleAvatar(child: Icon(Icons.favorite, color: Colors.pink)),
+                  CircleAvatar(
+                    backgroundColor: Color(0xFFFFCDD2), // soft red
+                    child: Icon(Icons.close, color: Colors.red),
+                  ),
+                  CircleAvatar(
+                    backgroundColor: Color(0xFFBBDEFB), // soft blue
+                    child: Icon(Icons.star, color: Colors.blue),
+                  ),
+                  CircleAvatar(
+                    backgroundColor: Color(0xFFF8BBD0), // soft pink
+                    child: Icon(Icons.favorite, color: Colors.pink),
+                  ),
                 ],
               ),
             ],
