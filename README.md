@@ -17,7 +17,7 @@ iLike is a sleek, modern dating app built using Flutter and MongoDB. It’s desi
 |--------|----------------------------------------|------------|
 | Sprint 1 | Project Setup, Git, Splash, Login, Signup, Validation     | ✅ Completed |
 | Sprint 2 | Native Splash, User Card, Theming, Bottom-Nav, Dashboard  | ✅ Completed |
-| Sprint 3 | Dark/Light Mode, Api Development            | 🔄 In Progress |
+| Sprint 3 | Dark/Light Mode, Hive local storage, Api Development            | ✅ Completed |
 | Sprint 4 | User Profile, Edit Profile, Firebase Auth   | ⏳ Upcoming |
 | Sprint 5 | Matchmaking Logic, Backend Integration      | ⏳ Upcoming |
 | Sprint 6 | Real-time Chat, Socket.io or Firebase       | ⏳ Upcoming |
