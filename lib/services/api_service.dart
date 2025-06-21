@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
-import '../constants/api.dart';
+import '../../core/constants/api.dart';
+
 
 class ApiService {
   final Dio _dio = Dio(BaseOptions(baseUrl: baseUrl));
