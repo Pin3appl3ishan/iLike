@@ -1,27 +1,31 @@
 class UserEntity {
-  final String id;
+  final String? id;
   final String email;
-  final String? name;
+  final String? username;
   final String? token;
+  final String password;
 
   const UserEntity({
-    required this.id,
+    this.id,
     required this.email,
-    this.name,
+    this.username,
     this.token,
+    required this.password,
   });
 
   UserEntity copyWith({
     String? id,
     String? email,
-    String? name,
+    String? username,
     String? token,
+    String? password,
   }) {
     return UserEntity(
       id: id ?? this.id,
       email: email ?? this.email,
-      name: name ?? this.name,
+      username: username ?? this.username,
       token: token ?? this.token,
+      password: password ?? this.password,
     );
   }
 }
