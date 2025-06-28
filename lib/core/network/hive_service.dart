@@ -1,109 +1,48 @@
+// lib/core/network/hive_service.dart
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:ilike/core/constants/hive_constants.dart';
-import 'package:ilike/features/auth/data/models/user_hive_model.g.dart';
+import 'package:path_provider/path_provider.dart' as path_provider;
+import 'package:ilike/core/error/failures.dart';
+import 'package:ilike/features/auth/data/models/user_hive_model.dart';
 
 class HiveService {
-  static bool _isInitialized = false;
-  
-  Future<void> ensureInitialized() async {
-    if (!_isInitialized) {
-      try {
-        // Initialize Hive with the app's documents directory
-        await Hive.initFlutter();
-        
-        // Register adapters
-        if (!Hive.isAdapterRegistered(0)) {
-          Hive.registerAdapter(UserHiveModelAdapter());
-        }
-        
-        // Open boxes
-        await Future.wait([
-          Hive.openBox<UserHiveModel>(HiveTableConstant.userBox),
-          Hive.openBox<String>(HiveTableConstant.tokenBox),
-        ]);
-        
-        _isInitialized = true;
-      } catch (e) {
-        throw Exception('Failed to initialize Hive: $e');
-      }
-    }
-  }
+  static const String _userBox = 'user_box';
+  static const String _tokenBox = 'token_box';
 
-  // User Queries
-  Future<void> saveUser(UserHiveModel user) async {
+  static Future<void> init() async {
     try {
-      await ensureInitialized();
-      final box = Hive.box<UserHiveModel>(HiveTableConstant.userBox);
-      await box.put(user.id, user);
-    } catch (e) {
-      throw Exception('Failed to save user: $e');
-    }
-  }
-
-  Future<void> deleteUser(String id) async {
-    try {
-      await ensureInitialized();
-      final box = Hive.box<UserHiveModel>(HiveTableConstant.userBox);
-      await box.delete(id);
-    } catch (e) {
-      throw Exception('Failed to delete user: $e');
-    }
-  }
-
-  Future<UserHiveModel?> getUser(String id) async {
-    try {
-      await ensureInitialized();
-      final box = Hive.box<UserHiveModel>(HiveTableConstant.userBox);
-      return box.get(id);
-    } catch (e) {
-      throw Exception('Failed to get user: $e');
-    }
-  }
-
-  Future<UserHiveModel?> getUserByEmail(String email) async {
-    try {
-      await ensureInitialized();
-      final box = Hive.box<UserHiveModel>(HiveTableConstant.userBox);
-      return box.values.firstWhere(
-        (user) => user.email == email,
-        orElse: () => null,
-      );
-    } catch (e) {
-      throw Exception('Failed to get user by email: $e');
-    }
-  }
-
-  // Clear all data (for logout)
-  Future<void> clearAll() async {
-    try {
-      await ensureInitialized();
+      final appDocumentDir = await path_provider.getApplicationDocumentsDirectory();
+      await Hive.initFlutter(appDocumentDir.path);
+      
+      // Register adapters
+      Hive.registerAdapter(UserHiveModelAdapter());
+      
+      // Open boxes
       await Future.wait([
-        Hive.box<UserHiveModel>(HiveTableConstant.userBox).clear(),
-        Hive.box<String>(HiveTableConstant.tokenBox).clear(),
+        Hive.openBox<UserHiveModel>(_userBox),
+        Hive.openBox<String>(_tokenBox),
       ]);
     } catch (e) {
-      throw Exception('Failed to clear data: $e');
+      throw const CacheFailure('Failed to initialize Hive');
     }
   }
-  
-  // Save and get token
-  Future<void> saveToken(String token) async {
+
+  static Future<void> close() async {
     try {
-      await ensureInitialized();
-      final box = Hive.box<String>(HiveTableConstant.tokenBox);
-      await box.put('auth_token', token);
+      await Hive.close();
     } catch (e) {
-      throw Exception('Failed to save token: $e');
+      throw const CacheFailure('Failed to close Hive');
     }
   }
-  
-  Future<String?> getToken() async {
+
+  static Box<UserHiveModel> get userBox => Hive.box<UserHiveModel>(_userBox);
+  static Box<String> get tokenBox => Hive.box<String>(_tokenBox);
+
+  static Future<void> clearAllData() async {
     try {
-      await ensureInitialized();
-      final box = Hive.box<String>(HiveTableConstant.tokenBox);
-      return box.get('auth_token');
+      await userBox.clear();
+      await tokenBox.clear();
     } catch (e) {
-      throw Exception('Failed to get token: $e');
+      throw const CacheFailure('Failed to clear Hive data');
     }
   }
 }
