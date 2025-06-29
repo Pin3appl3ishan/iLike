@@ -29,12 +29,16 @@ class UserHiveModel extends HiveObject {
   });
 
   factory UserHiveModel.fromEntity(UserEntity entity) {
+    if (entity.password == null) {
+      throw ArgumentError('Cannot create UserHiveModel with null password');
+    }
+
     return UserHiveModel(
       id: entity.id ?? '',
       email: entity.email,
       username: entity.username,
       token: entity.token,
-      password: entity.password,
+      password: entity.password!,
     );
   }
 

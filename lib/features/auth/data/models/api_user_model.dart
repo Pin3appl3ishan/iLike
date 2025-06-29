@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:ilike/features/auth/domain/entities/user_entity.dart';
 
 part 'api_user_model.g.dart';
 
@@ -35,14 +36,13 @@ class ApiUserModel {
   Map<String, dynamic> toJson() => _$ApiUserModelToJson(this);
   
   // Convert API model to domain entity
-  Map<String, dynamic> toEntity() {
-    return {
-      'id': id,
-      'name': name,
-      'email': email,
-      'bio': bio,
-      'avatar': avatar,
-      'token': token,
-    };
+  UserEntity toEntity({String? password}) {
+    return UserEntity(
+      id: id,
+      email: email,
+      username: name,
+      token: token,
+      password: password, // Password is required in UserEntity
+    );
   }
 }
