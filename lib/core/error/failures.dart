@@ -13,6 +13,10 @@ class ServerFailure extends Failure {
   const ServerFailure(super.message);
 }
 
+class UnauthorizedFailure extends Failure {
+  const UnauthorizedFailure(super.message);
+}
+
 class CacheFailure extends Failure {
   const CacheFailure(super.message);
 }
@@ -22,6 +26,7 @@ class NetworkFailure extends Failure {
 }
 
 class ValidationFailure extends Failure {
-  const ValidationFailure(super.message);
+  const ValidationFailure(super.message, this.errors);
 
+  final List<String> errors;
 }
