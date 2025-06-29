@@ -2,66 +2,61 @@ import 'package:dartz/dartz.dart';
 import 'package:ilike/core/error/failures.dart';
 import 'package:ilike/features/auth/data/models/user_hive_model.dart';
 import 'package:ilike/core/network/hive_service.dart';
-import 'package:ilike/features/auth/domain/entities/user_entity.dart';
 
-abstract class AuthLocalDataSource {
-  Future<UserHiveModel?> getUser(String id);
-  Future<UserHiveModel?> getUserByEmail(String email);
-  Future<Unit> saveUser(UserHiveModel user);
-  Future<Unit> deleteUser(String id);
-  Future<Unit> clearAll();
+abstract interface class AuthLocalDataSource {
+  Future<void> cacheUser(UserHiveModel user);
+  Future<Option<UserHiveModel>> getCachedUser();
+  Future<void> clearCachedUser();
+  Future<bool> isUserLoggedIn();
+  Future<void> cacheAuthToken(String token);
+  Future<Option<String>> getAuthToken();
 }
 
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
-  final HiveService hiveService;
-
-  AuthLocalDataSourceImpl({required this.hiveService});
+  const AuthLocalDataSourceImpl();
 
   @override
-  Future<UserHiveModel?> getUser(String id) async {
+  Future<void> cacheAuthToken(String token) async {
+    await  HiveService.cacheAuthToken(token);
+  }
+
+  @override
+  Future<void> cacheUser(UserHiveModel user) async {
     try {
-      return await hiveService.getUser(id);
+      await HiveService.cacheUser(user);
     } catch (e) {
-      throw CacheFailure('Failed to get user: $e');
+      throw CacheFailure('Failed to cache user: $e');
     }
   }
 
   @override
-  Future<UserHiveModel?> getUserByEmail(String email) async {
+  Future<void> clearCachedUser() async {
+    await HiveService.clearCachedUser();
+  }
+
+  @override
+  Future<Option<String>> getAuthToken() async {
     try {
-      return await hiveService.getUserByEmail(email);
+      final token = HiveService.getAuthToken();
+      return token != null ? Some(token) : const None();
     } catch (e) {
-      throw CacheFailure('Failed to get user by email: $e');
+      return const None();
     }
   }
 
   @override
-  Future<Unit> saveUser(UserHiveModel user) async {
+  Future<Option<UserHiveModel>> getCachedUser() async {
     try {
-      await hiveService.saveUser(user);
-      return unit;
+      final user = await HiveService.getCachedUser();
+      return user;
     } catch (e) {
-      throw CacheFailure('Failed to save user: $e');
+      return const None();
     }
   }
 
   @override
-  Future<Unit> deleteUser(String id) async {
-    try {
-      await hiveService.deleteUser(id);
-      return unit;
-    } catch (e) {
-      throw CacheFailure('Failed to delete user: $e');
-    }
+  Future<bool> isUserLoggedIn() async {
+    return await HiveService.isUserLoggedIn();
   }
-
-  @override
-  Future<Unit> clearAll() async {
-    try {
-      await hiveService.clearAll();
-      return unit;
-    } catch (e) {
-      throw CacheFailure('Failed to clear data: $e');
-    }
-  }
+  
 }
