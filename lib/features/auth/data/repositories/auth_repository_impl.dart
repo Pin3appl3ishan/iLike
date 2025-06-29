@@ -1,122 +1,96 @@
 import 'package:dartz/dartz.dart';
 import 'package:ilike/core/error/failures.dart';
-import 'package:ilike/features/auth/data/datasources/local/auth_local_data_source.dart';
-import 'package:ilike/features/auth/data/datasources/remote/auth_remote_data_source.dart';
-import 'package:ilike/features/auth/data/models/api_user_model.dart';
-import 'package:ilike/features/auth/data/models/user_hive_model.dart';
+import 'package:ilike/features/auth/data/repositories/remote_repository/auth_remote_repository.dart';
+import 'package:ilike/features/auth/data/repositories/local_repository/auth_local_repository.dart';
 import 'package:ilike/features/auth/domain/entities/user_entity.dart';
 import 'package:ilike/features/auth/domain/repositories/auth_repository.dart';
 
-class AuthRepositoryImpl implements AuthRepository {
-  final AuthRemoteDataSource remoteDataSource;
-  final AuthLocalDataSource localDataSource;
+class AuthRepositoryImpl implements IAuthRepository {
+  final AuthRemoteRepository remoteRepository;
+  final AuthLocalRepository localRepository;
 
   AuthRepositoryImpl({
-    required this.remoteDataSource,
-    required this.localDataSource,
+    required this.remoteRepository,
+    required this.localRepository,
   });
 
   @override
-  Future<Either<Failure, UserEntity>> login(String email, String password) async {
-    try {
-      // Try to login remotely
-      final apiUser = await remoteDataSource.login(email, password);
-      
-      // Convert to Hive model and save locally
-      final userHiveModel = UserHiveModel(
-        id: apiUser.id,
-        email: apiUser.email,
-        name: apiUser.name,
-        token: apiUser.token,
-        password: password, // Note: In a real app, use proper password hashing
-      );
-      
-      await localDataSource.saveUser(userHiveModel);
-      
-      return Right(userHiveModel.toEntity());
-    } on ServerException {
-      return Left(ServerFailure('Server error occurred'));
-    } on UnauthorizedException {
-      return Left(UnauthorizedFailure('Invalid email or password'));
-    } on CacheFailure {
-      return Left(CacheFailure('Failed to save user data locally'));
-    } catch (e) {
-      return Left(ServerFailure('An unexpected error occurred'));
-    }
+  Future<Either<Failure, UserEntity>> login(
+    String email,
+    String password,
+  ) async {
+    final result = await remoteRepository.login(email, password);
+
+    // if login is success, cache user in local storage
+    return await result.fold((failure) async => Left(failure), (user) async {
+      await localRepository.cacheUser(user);
+      if (user.token != null) {
+        await localRepository.cacheAuthToken(user.token!);
+      }
+      return Right(user);
+    });
   }
 
   @override
-  Future<Either<Failure, UserEntity>> register(String name, String email, String password) async {
-    try {
-      // Try to register remotely
-      final apiUser = await remoteDataSource.register(name, email, password);
-      
-      // Convert to Hive model and save locally
-      final userHiveModel = UserHiveModel(
-        id: apiUser.id,
-        email: apiUser.email,
-        name: apiUser.name,
-        token: apiUser.token,
-        password: password, // Note: In a real app, use proper password hashing
-      );
-      
-      await localDataSource.saveUser(userHiveModel);
-      
-      return Right(userHiveModel.toEntity());
-    } on ServerException {
-      return Left(ServerFailure('Server error occurred'));
-    } on BadRequestException {
-      return Left(ValidationFailure('Email already in use'));
-    } on CacheFailure {
-      return Left(CacheFailure('Failed to save user data locally'));
-    } catch (e) {
-      return Left(ServerFailure('An unexpected error occurred'));
-    }
+  Future<Either<Failure, void>> logout() async {
+    // Get the current token
+    final tokenResult = await localRepository.getAuthToken();
+
+    // Try to logout from the server if we have a token
+    await tokenResult.fold((failure) => Future.value(null), (token) async {
+      if (token != null) {
+        await remoteRepository.logout(token);
+      }
+    });
+
+    // Clear local data in any case
+    await localRepository.clearCachedUser();
+    return const Right(null);
   }
 
   @override
-  Future<Either<Failure, Unit>> logout() async {
-    try {
-      await remoteDataSource.logout();
-      await localDataSource.clearAll();
-      return const Right(unit);
-    } on ServerException {
-      // Even if logout fails remotely, we still want to clear local data
-      await localDataSource.clearAll();
-      return const Right(unit);
-    } on CacheFailure {
-      return Left(CacheFailure('Failed to clear local data'));
-    } catch (e) {
-      return Left(ServerFailure('An unexpected error occurred'));
-    }
-  }
+  Future<Either<Failure, UserEntity>> register(
+    String name,
+    String email,
+    String password,
+  ) async {
+    final result = await remoteRepository.register(name, email, password);
 
-  @override
-  Future<Either<Failure, bool>> isLoggedIn() async {
-    try {
-      // In this implementation, we consider the user logged in if we have a token
-      final user = await localDataSource.getUser('current');
-      return Right(user != null && user.token != null);
-    } on CacheFailure {
-      return Left(CacheFailure('Failed to check login status'));
-    } catch (e) {
-      return Left(ServerFailure('An unexpected error occurred'));
-    }
+    // if register is success, cache user in local storage
+    return await result.fold((failure) async => Left(failure), (user) async {
+      await localRepository.cacheUser(user);
+      if (user.token != null) {
+        await localRepository.cacheAuthToken(user.token!);
+      }
+      return Right(user);
+    });
   }
 
   @override
   Future<Either<Failure, UserEntity>> getCurrentUser() async {
-    try {
-      final user = await localDataSource.getUser('current');
-      if (user != null) {
-        return Right(user.toEntity());
-      } else {
-        return Left(CacheFailure('No user found'));
+    // Get the token from local storage first
+    final tokenResult = await localRepository.getAuthToken();
+
+    return await tokenResult.fold((failure) => Left(failure), (token) async {
+      if (token == null) {
+        return Left(CacheFailure('No authentication token found'));
       }
-    } on CacheFailure {
-      return Left(CacheFailure('Failed to get current user'));
-    } catch (e) {
-      return Left(ServerFailure('An unexpected error occurred'));
-    }
+
+      final result = await remoteRepository.getCurrentUser(token);
+
+      // if get current user is successful, cache user in local storage
+      return await result.fold((failure) => Left(failure), (user) async {
+        await localRepository.cacheUser(user);
+        if (user.token != null) {
+          await localRepository.cacheAuthToken(user.token!);
+        }
+        return Right(user);
+      });
+    });
+  }
+
+  @override
+  Future<Either<Failure, bool>> isLoggedIn() async {
+    return await localRepository.isUserLoggedIn();
   }
 }
