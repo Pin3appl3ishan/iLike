@@ -1,5 +1,4 @@
-import 'package:equatable/equatable.dart';
-import 'package:ilike/features/auth/domain/entities/user_entity.dart';
+part of 'auth_bloc.dart';
 
 abstract class AuthState extends Equatable {
   const AuthState();
@@ -15,7 +14,7 @@ class AuthLoading extends AuthState {}
 class Authenticated extends AuthState {
   final UserEntity user;
 
-  const Authenticated(this.user);
+  const Authenticated({required this.user});
 
   @override
   List<Object> get props => [user];
@@ -25,9 +24,10 @@ class Unauthenticated extends AuthState {}
 
 class AuthError extends AuthState {
   final String message;
+  final Map<String, String>? fieldErrors;
 
-  const AuthError(this.message);
+  const AuthError({required this.message, this.fieldErrors});
 
   @override
-  List<Object> get props => [message];
+  List<Object> get props => [message, fieldErrors ?? []];
 }
