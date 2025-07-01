@@ -20,11 +20,21 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<ApiUserModel> login(String email, String password) async {
     try {
       final response = await dio.post(
-        '${ApiConstants.baseUrl}/auth/login',
+        '${ApiConstants.baseUrl}/users/login',
         data: {'email': email, 'password': password},
       );
 
-      return ApiUserModel.fromJson(response.data);
+      // Expecting { success: true, token: ..., user: { ... } }
+      final userJson = Map<String, dynamic>.from(response.data['user'] ?? {});
+      final token = response.data['token'] as String?;
+      // Inject token into userJson so it will be available in entity mapping
+      if (token != null) userJson['token'] = token;
+      // Backend uses 'id'; model expects '_id'
+      if (userJson.containsKey('id') && !userJson.containsKey('_id')) {
+        userJson['_id'] = userJson.remove('id');
+      }
+      final model = ApiUserModel.fromJson(userJson);
+      return model;
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         throw UnauthorizedException('Invalid email or password');
@@ -43,11 +53,17 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   ) async {
     try {
       final response = await dio.post(
-        '${ApiConstants.baseUrl}/auth/register',
+        '${ApiConstants.baseUrl}/users/register',
         data: {'name': name, 'email': email, 'password': password},
       );
 
-      return ApiUserModel.fromJson(response.data);
+      final userJson = Map<String, dynamic>.from(response.data['user'] ?? {});
+      final token = response.data['token'] as String?;
+      if (token != null) userJson['token'] = token;
+      if (userJson.containsKey('id') && !userJson.containsKey('_id')) {
+        userJson['_id'] = userJson.remove('id');
+      }
+      return ApiUserModel.fromJson(userJson);
     } on DioException catch (e) {
       if (e.response?.statusCode == 400) {
         throw BadRequestException('Email already in use');
@@ -62,7 +78,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<void> logout(String token) async {
     try {
       await dio.post(
-        '${ApiConstants.baseUrl}/auth/logout',
+        '${ApiConstants.baseUrl}/users/logout',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
     } catch (e) {
@@ -74,7 +90,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<ApiUserModel> getCurrentUser(String token) async {
     try {
       final response = await dio.get(
-        '${ApiConstants.baseUrl}/auth/me',
+        '${ApiConstants.baseUrl}/users/me',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
@@ -88,7 +104,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<void> refreshToken(String refreshToken) async {
     try {
       await dio.post(
-        '${ApiConstants.baseUrl}/auth/refresh',
+        '${ApiConstants.baseUrl}/users/refresh',
         data: {'refresh_token': refreshToken},
       );
     } catch (e) {
