@@ -84,7 +84,7 @@ class HiveService {
 
   static Future<bool> isUserLoggedIn() async {
     try {
-      final token = await getAuthToken();
+      final token = getAuthToken(); 
       return token != null && token.isNotEmpty;
     } catch (e) {
       return false;

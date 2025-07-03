@@ -1,26 +1,17 @@
 import 'package:dartz/dartz.dart';
 import 'package:ilike/core/error/failures.dart';
+import 'package:ilike/core/usecase/usecase.dart';
 import 'package:ilike/features/auth/domain/repositories/auth_repository.dart';
 
 /// Use case for handling user logout
-class LogoutUseCase {
-  final AuthRepository repository;
+class LogoutUseCase implements UsecaseWithoutParams<Unit> {
+  final IAuthRepository repository;
 
   LogoutUseCase(this.repository);
 
-  /// Executes the logout use case
-  /// 
-  /// Returns [Unit] if logout is successful
-  /// Returns [Failure] if logout fails
+  @override
   Future<Either<Failure, Unit>> call() async {
-    try {
-      final result = await repository.logout();
-      return result.fold(
-        (failure) => Left(failure),
-        (_) => const Right(unit),
-      );
-    } catch (e) {
-      return Left(ServerFailure('An unexpected error occurred during logout'));
-    }
+    final result = await repository.logout(); // returns Either<Failure, void>
+    return result.map((_) => unit); // safely convert to Either<Failure, Unit>
   }
 }

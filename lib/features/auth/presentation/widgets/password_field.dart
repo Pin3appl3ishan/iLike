@@ -13,7 +13,7 @@ class PasswordField extends StatefulWidget {
   final String? initialValue;
 
   const PasswordField({
-    Key? key,
+    super.key,
     required this.controller,
     this.label = 'Password',
     this.validator,
@@ -23,10 +23,10 @@ class PasswordField extends StatefulWidget {
     this.autofocus = false,
     this.hintText,
     this.initialValue,
-  }) : super(key: key);
+  });
 
   @override
-  _PasswordFieldState createState() => _PasswordFieldState();
+  State<PasswordField> createState() => _PasswordFieldState();
 }
 
 class _PasswordFieldState extends State<PasswordField> {

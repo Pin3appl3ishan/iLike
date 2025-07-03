@@ -60,9 +60,7 @@ class AppTheme {
       onSecondary: Colors.white,
       error: const Color(0xFFE53935),
       onError: Colors.white,
-      background: Colors.grey[50]!,
-      onBackground: Colors.black87,
-      surface: Colors.white,
+      surface: Colors.grey[50]!,
       onSurface: Colors.black87,
     );
 
@@ -79,18 +77,18 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: colorScheme.background,
+      scaffoldBackgroundColor: colorScheme.surface,
       extensions: [cardTheme],
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         titleTextStyle: TextStyle(
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
-        iconTheme: IconThemeData(color: colorScheme.onBackground),
+        iconTheme: IconThemeData(color: colorScheme.onSurface),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -134,9 +132,7 @@ class AppTheme {
       onSecondary: Colors.white,
       error: const Color(0xFFE53935),
       onError: Colors.white,
-      background: const Color(0xFF121212),
-      onBackground: Colors.white,
-      surface: const Color(0xFF1E1E1E),
+      surface: const Color(0xFF121212),
       onSurface: Colors.white,
     );
 
@@ -153,7 +149,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: colorScheme.background,
+      scaffoldBackgroundColor: colorScheme.surface,
       extensions: [cardTheme],
       appBarTheme: AppBarTheme(
         backgroundColor: colorScheme.surface,

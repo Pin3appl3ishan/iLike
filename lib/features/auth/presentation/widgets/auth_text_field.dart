@@ -23,8 +23,8 @@ class AuthTextField extends StatelessWidget {
   final String? hintText;
   final EdgeInsetsGeometry? contentPadding;
 
-  const AuthTextField({
-    Key? key,
+  const AuthTextField({ 
+    super.key,
     required this.controller,
     required this.label,
     required this.icon,
@@ -46,7 +46,7 @@ class AuthTextField extends StatelessWidget {
     this.textCapitalization = TextCapitalization.none,
     this.hintText,
     this.contentPadding,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

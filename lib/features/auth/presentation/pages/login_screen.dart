@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ilike/core/theme/theme_data.dart';
 import 'package:ilike/core/utils/snackbar_utils.dart';
 import 'package:ilike/core/utils/validation_utils.dart';
-import 'package:ilike/features/auth/presentation/bloc/auth/auth.dart';
+import 'package:ilike/features/auth/presentation/bloc/auth.dart';
 import 'package:ilike/features/auth/presentation/widgets/auth_text_field.dart';
 import 'package:ilike/features/auth/presentation/widgets/password_field.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
@@ -23,8 +22,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    // Check if user is already logged in
-    context.read<AuthBloc>().add(CheckAuthStatusEvent());
   }
 
   @override
@@ -37,11 +34,11 @@ class _LoginScreenState extends State<LoginScreen> {
   void _onLoginPressed() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<AuthBloc>().add(
-            LoginEvent(
-              email: _emailController.text.trim(),
-              password: _passwordController.text,
-            ),
-          );
+        LoginEvent(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        ),
+      );
     }
   }
 
@@ -54,11 +51,13 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthLoading) {
+          if (state is AuthLoading && !_isLoading) {
             setState(() => _isLoading = true);
           } else if (state is Authenticated) {
             setState(() => _isLoading = false);
             Navigator.pushReplacementNamed(context, '/home');
+          } else if (state is AuthInitial) {
+            if (_isLoading) setState(() => _isLoading = false);
           } else if (state is AuthError) {
             setState(() => _isLoading = false);
             showErrorSnackBar(context, state.message);
@@ -77,22 +76,24 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 48.0),
                     Text(
                       'Welcome Back',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).primaryColor,
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8.0),
                     Text(
                       'Sign in to continue',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey,
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 48.0),
-                    
+
                     // Email Field
                     AuthTextField(
                       controller: _emailController,
@@ -101,18 +102,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) => Validator.validateEmail(value),
                     ),
-                    
+
                     const SizedBox(height: 16.0),
-                    
+
                     // Password Field
                     PasswordField(
                       controller: _passwordController,
                       label: 'Password',
                       validator: (value) => Validator.validatePassword(value),
                     ),
-                    
+
                     const SizedBox(height: 8.0),
-                    
+
                     // Forgot Password Button
                     Align(
                       alignment: Alignment.centerRight,
@@ -123,9 +124,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: const Text('Forgot Password?'),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 24.0),
-                    
+
                     // Login Button
                     ElevatedButton(
                       onPressed: _isLoading ? null : _onLoginPressed,
@@ -136,20 +137,23 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(8.0),
                         ),
                       ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : const Text('Login'),
+                      child:
+                          _isLoading
+                              ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                              : const Text('Login'),
                     ),
-                    
+
                     const SizedBox(height: 24.0),
-                    
+
                     // Register Link
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,

@@ -3,14 +3,14 @@ class UserEntity {
   final String email;
   final String? username;
   final String? token;
-  final String password;
+  final String? password;
 
   const UserEntity({
     this.id,
     required this.email,
     this.username,
     this.token,
-    required this.password,
+    this.password,
   });
 
   UserEntity copyWith({

@@ -51,12 +51,10 @@ class AuthRemoteRepositoryImpl implements AuthRemoteRepository {
     } on ServerException catch (e) {
       return Left(ServerFailure(e.toString()));
     } on ValidationException catch (e) {
-      final errorList =
-          e.errors?.entries
-              .map((entry) => '${entry.key}: ${entry.value}')
-              .toList() ??
-          [];
-      return Left(ValidationFailure(e.message, errorList));
+      final Map<String, String> stringErrors = (e.errors ?? {}).map(
+        (key, value) => MapEntry(key, value.toString()),
+      );
+      return Left(ValidationFailure(e.message, stringErrors));  
     } catch (e) {
       return Left(ServerFailure('An unexpected error occurred'));
     }

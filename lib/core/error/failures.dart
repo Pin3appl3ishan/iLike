@@ -28,5 +28,5 @@ class NetworkFailure extends Failure {
 class ValidationFailure extends Failure {
   const ValidationFailure(super.message, this.errors);
 
-  final List<String> errors;
+  final Map<String, String> errors;
 }
