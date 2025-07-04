@@ -19,8 +19,10 @@ import 'package:ilike/features/profile/data/datasources/local_datasource/profile
 import 'package:ilike/features/profile/data/datasources/remote_datasource/profile_remote_datasource.dart';
 import 'package:ilike/features/profile/data/repositories/profile_repository_impl.dart';
 import 'package:ilike/features/profile/domain/repositories/profile_repository.dart';
+import 'package:ilike/features/profile/domain/usecases/get_profile_usecase.dart';
 import 'package:ilike/features/profile/domain/usecases/save_profile_usecase.dart';
 import 'package:ilike/features/profile/presentation/bloc/onboarding/bloc/onboarding_bloc.dart';
+import 'package:ilike/features/profile/presentation/bloc/profile_bloc.dart';
 import 'package:ilike/core/network/token_interceptor.dart';
 
 final sl = GetIt.instance;
@@ -101,6 +103,12 @@ void _initRepositories() {
   );
 }
 
+void _initProfileRepositories() {
+  sl.registerLazySingleton<IProfileRepository>(
+    () => ProfileRepositoryImpl(localDataSource: sl(), remoteDataSource: sl()),
+  );
+}
+
 // Data Sources
 void _initDataSources() {
   sl.registerLazySingleton<AuthRemoteDataSource>(
@@ -141,6 +149,7 @@ void _initUseCases() {
 // Profile use cases
 void _initProfileUseCases() {
   sl.registerLazySingleton<SaveProfile>(() => SaveProfile(sl()));
+  sl.registerLazySingleton<GetProfileUseCase>(() => GetProfileUseCase(sl()));
 }
 
 // Bloc
@@ -159,6 +168,9 @@ void _initBlocs() {
 // Profile blocs
 void _initProfileBlocs() {
   sl.registerFactory<OnboardingBloc>(() => OnboardingBloc(saveProfile: sl()));
+  sl.registerFactory<ProfileBloc>(
+    () => ProfileBloc(getProfile: sl(), updateProfile: sl()),
+  );
 }
 
 // Future<void> _initAuthModule() async {
@@ -227,9 +239,3 @@ void _initProfileBlocs() {
 //     () => LoginViewModel(sl<StudentLoginUsecase>()),
 //   );
 // }
-
-void _initProfileRepositories() {
-  sl.registerLazySingleton<IProfileRepository>(
-    () => ProfileRepositoryImpl(localDataSource: sl(), remoteDataSource: sl()),
-  );
-}
