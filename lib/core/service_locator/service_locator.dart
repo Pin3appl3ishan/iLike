@@ -21,9 +21,19 @@ import 'package:ilike/features/profile/data/repositories/profile_repository_impl
 import 'package:ilike/features/profile/domain/repositories/profile_repository.dart';
 import 'package:ilike/features/profile/domain/usecases/get_profile_usecase.dart';
 import 'package:ilike/features/profile/domain/usecases/save_profile_usecase.dart';
+import 'package:ilike/features/profile/domain/usecases/update_profile_usecase.dart';
 import 'package:ilike/features/profile/presentation/bloc/onboarding/bloc/onboarding_bloc.dart';
 import 'package:ilike/features/profile/presentation/bloc/profile_bloc.dart';
 import 'package:ilike/core/network/token_interceptor.dart';
+import 'package:ilike/features/matches/data/datasources/remote_datasource/match_remote_datasource.dart';
+import 'package:ilike/features/matches/data/repositories/match_repository_impl.dart';
+import 'package:ilike/features/matches/domain/repositories/match_repository.dart';
+import 'package:ilike/features/matches/domain/usecases/get_potential_matches_usecase.dart';
+import 'package:ilike/features/matches/domain/usecases/like_user_usecase.dart';
+import 'package:ilike/features/matches/domain/usecases/dislike_user_usecase.dart';
+import 'package:ilike/features/matches/domain/usecases/get_matches_usecase.dart';
+import 'package:ilike/features/matches/domain/usecases/get_likes_usecase.dart';
+import 'package:ilike/features/matches/presentation/bloc/match_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -36,17 +46,20 @@ Future<void> initDependencies() async {
   _initNetwork();
 
   _initDataSources();
-
   _initProfileDataSources();
+  _initMatchDataSources();
 
   _initRepositories();
   _initProfileRepositories();
+  _initMatchRepositories();
 
   _initUseCases();
   _initProfileUseCases();
+  _initMatchUseCases();
 
   _initBlocs();
   _initProfileBlocs();
+  _initMatchBlocs();
 }
 
 Future<void> _initHiveService() async {
@@ -150,6 +163,47 @@ void _initUseCases() {
 void _initProfileUseCases() {
   sl.registerLazySingleton<SaveProfile>(() => SaveProfile(sl()));
   sl.registerLazySingleton<GetProfileUseCase>(() => GetProfileUseCase(sl()));
+  sl.registerLazySingleton<UpdateProfileUseCase>(
+    () => UpdateProfileUseCase(sl()),
+  );
+}
+
+// Match data sources
+void _initMatchDataSources() {
+  sl.registerLazySingleton<MatchRemoteDataSource>(
+    () => MatchRemoteDataSourceImpl(dio: sl()),
+  );
+}
+
+// Match repositories
+void _initMatchRepositories() {
+  sl.registerLazySingleton<MatchRepository>(
+    () => MatchRepositoryImpl(remoteDataSource: sl()),
+  );
+}
+
+// Match use cases
+void _initMatchUseCases() {
+  sl.registerLazySingleton<GetPotentialMatchesUseCase>(
+    () => GetPotentialMatchesUseCase(sl()),
+  );
+  sl.registerLazySingleton<LikeUserUseCase>(() => LikeUserUseCase(sl()));
+  sl.registerLazySingleton<DislikeUserUseCase>(() => DislikeUserUseCase(sl()));
+  sl.registerLazySingleton<GetMatchesUseCase>(() => GetMatchesUseCase(sl()));
+  sl.registerLazySingleton<GetLikesUseCase>(() => GetLikesUseCase(sl()));
+}
+
+// Match blocs
+void _initMatchBlocs() {
+  sl.registerLazySingleton<MatchBloc>(
+    () => MatchBloc(
+      getPotentialMatches: sl(),
+      likeUser: sl(),
+      dislikeUser: sl(),
+      getMatches: sl(),
+      getLikes: sl(),
+    ),
+  );
 }
 
 // Bloc
@@ -168,74 +222,7 @@ void _initBlocs() {
 // Profile blocs
 void _initProfileBlocs() {
   sl.registerFactory<OnboardingBloc>(() => OnboardingBloc(saveProfile: sl()));
-  sl.registerFactory<ProfileBloc>(
+  sl.registerLazySingleton<ProfileBloc>(
     () => ProfileBloc(getProfile: sl(), updateProfile: sl()),
   );
 }
-
-// Future<void> _initAuthModule() async {
-//   // ===================== Data Source ====================
-//   sl.registerFactory(
-//     () => AuthLocalDataSource(hiveService: sl<HiveService>()),
-//   );
-
-//   sl.registerFactory(
-//     () => AuthRemoteDataSource(apiService: sl<ApiService>()),
-//   );
-
-//   // ===================== Repository ====================
-
-//   sl.registerFactory(
-//     () => AuthLocalRepository(
-//       studentLocalDatasource: sl<StudentLocalDatasource>(),
-//     ),
-//   );
-
-//   sl.registerFactory(
-//     () => StudentRemoteRepository(
-//       studentRemoteDataSource: serviceLocator<StudentRemoteDataSource>(),
-//     ),
-//   );
-
-//   // ===================== Usecases ====================
-
-//   sl.registerFactory(
-//     () => StudentLoginUsecase(
-//       studentRepository: sl<StudentRemoteRepository>(),
-//     ),
-//   );
-
-//   sl.registerFactory(
-//     () => StudentRegisterUsecase(
-//       studentRepository: sl<StudentRemoteRepository>(),
-//     ),
-//   );
-
-//   sl.registerFactory(
-//     () => UploadImageUsecase(
-//       studentRepository: sl<StudentRemoteRepository>(),
-//     ),
-//   );
-
-//   sl.registerFactory(
-//     () => StudentGetCurrentUsecase(
-//       studentRepository: sl<StudentRemoteRepository>(),
-//     ),
-//   );
-
-//   // ===================== ViewModels ====================
-
-//   sl.registerFactory(
-//     () => RegisterViewModel(
-//       sl<BatchViewModel>(),
-//       sl<CourseViewModel>(),
-//       sl<StudentRegisterUsecase>(),
-//       sl<UploadImageUsecase>(),
-//     ),
-//   );
-
-//   // Register LoginViewModel WITHOUT HomeViewModel to avoid circular dependency
-//   sl.registerFactory(
-//     () => LoginViewModel(sl<StudentLoginUsecase>()),
-//   );
-// }
