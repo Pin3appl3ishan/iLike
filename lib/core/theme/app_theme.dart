@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_pallette.dart';
 
 @immutable
 class CustomCardTheme extends ThemeExtension<CustomCardTheme> {
@@ -34,7 +35,10 @@ class CustomCardTheme extends ThemeExtension<CustomCardTheme> {
   }
 
   @override
-  ThemeExtension<CustomCardTheme> lerp(ThemeExtension<CustomCardTheme>? other, double t) {
+  ThemeExtension<CustomCardTheme> lerp(
+    ThemeExtension<CustomCardTheme>? other,
+    double t,
+  ) {
     if (other is! CustomCardTheme) {
       return this;
     }
@@ -48,28 +52,24 @@ class CustomCardTheme extends ThemeExtension<CustomCardTheme> {
   }
 }
 
-
 class AppTheme {
   static ThemeData get lightTheme {
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF6C63FF),
+    final colorScheme = ColorScheme(
       brightness: Brightness.light,
-      primary: const Color(0xFF6C63FF),
-      onPrimary: Colors.white,
-      secondary: const Color(0xFF4CAF50),
-      onSecondary: Colors.white,
-      error: const Color(0xFFE53935),
-      onError: Colors.white,
-      surface: Colors.grey[50]!,
-      onSurface: Colors.black87,
+      primary: AppPallete.primaryColor,
+      onPrimary: AppPallete.onPrimary,
+      secondary: AppPallete.secondaryColor,
+      onSecondary: AppPallete.onSecondary,
+      error: AppPallete.errorColor,
+      onError: AppPallete.onError,
+      surface: AppPallete.surfaceLight,
+      onSurface: AppPallete.onSurfaceLight,
     );
 
     final cardTheme = CustomCardTheme(
       color: colorScheme.surface,
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
       margin: const EdgeInsets.all(8.0),
     );
@@ -77,7 +77,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: colorScheme.surface,
+      scaffoldBackgroundColor: colorScheme.onSurface,
       extensions: [cardTheme],
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -95,9 +95,7 @@ class AppTheme {
           backgroundColor: colorScheme.primary,
           foregroundColor: colorScheme.onPrimary,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           elevation: 2,
         ),
       ),
@@ -123,25 +121,22 @@ class AppTheme {
   }
 
   static ThemeData get darkTheme {
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF6C63FF),
+    final colorScheme = ColorScheme(
       brightness: Brightness.dark,
-      primary: const Color(0xFF6C63FF),
-      onPrimary: Colors.white,
-      secondary: const Color(0xFF4CAF50),
-      onSecondary: Colors.white,
-      error: const Color(0xFFE53935),
-      onError: Colors.white,
-      surface: const Color(0xFF121212),
-      onSurface: Colors.white,
+      primary: AppPallete.primaryColor,
+      onPrimary: AppPallete.onPrimary,
+      secondary: AppPallete.secondaryColor,
+      onSecondary: AppPallete.onSecondary,
+      error: AppPallete.errorColor,
+      onError: AppPallete.onError,
+      surface: AppPallete.surfaceDark,
+      onSurface: AppPallete.onSurfaceDark,
     );
 
     final cardTheme = CustomCardTheme(
       color: colorScheme.surface,
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
       margin: const EdgeInsets.all(8.0),
     );
@@ -149,7 +144,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: colorScheme.surface,
+      scaffoldBackgroundColor: colorScheme.onSurface,
       extensions: [cardTheme],
       appBarTheme: AppBarTheme(
         backgroundColor: colorScheme.surface,
@@ -167,9 +162,7 @@ class AppTheme {
           backgroundColor: colorScheme.primary,
           foregroundColor: colorScheme.onPrimary,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           elevation: 2,
         ),
       ),
