@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:ilike/core/error/exceptions.dart';
 import 'package:ilike/core/network/api_constants.dart';
@@ -9,6 +10,19 @@ abstract class AuthRemoteDataSource {
   Future<void> logout(String token);
   Future<ApiUserModel> getCurrentUser(String token);
   Future<void> refreshToken(String refreshToken);
+}
+
+Map<String, dynamic> parseJwt(String token) {
+  final parts = token.split('.');
+  if (parts.length != 3) {
+    throw FormatException('Invalid token format');
+  }
+
+  final payload = parts[1];
+  final normalized = base64Url.normalize(payload);
+  final resp = utf8.decode(base64Url.decode(normalized));
+  final payloadMap = json.decode(resp);
+  return payloadMap;
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -27,8 +41,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       // Expecting { success: true, token: ..., user: { ... } }
       final userJson = Map<String, dynamic>.from(response.data['user'] ?? {});
       final token = response.data['token'] as String?;
-      // Inject token into userJson so it will be available in entity mapping
-      if (token != null) userJson['token'] = token;
+
+      // Parse JWT token to get hasCompletedProfile
+      if (token != null) {
+        userJson['token'] = token;
+        try {
+          final tokenData = parseJwt(token);
+          userJson['hasCompletedProfile'] =
+              tokenData['hasCompletedProfile'] ?? false;
+        } catch (e) {
+          print('Error parsing JWT token: $e');
+        }
+      }
+
       // Backend uses 'id'; model expects '_id'
       if (userJson.containsKey('id') && !userJson.containsKey('_id')) {
         userJson['_id'] = userJson.remove('id');
@@ -59,7 +84,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       final userJson = Map<String, dynamic>.from(response.data['user'] ?? {});
       final token = response.data['token'] as String?;
-      if (token != null) userJson['token'] = token;
+
+      // Parse JWT token to get hasCompletedProfile
+      if (token != null) {
+        userJson['token'] = token;
+        try {
+          final tokenData = parseJwt(token);
+          userJson['hasCompletedProfile'] =
+              tokenData['hasCompletedProfile'] ?? false;
+        } catch (e) {
+          print('Error parsing JWT token: $e');
+        }
+      }
+
       if (userJson.containsKey('id') && !userJson.containsKey('_id')) {
         userJson['_id'] = userJson.remove('id');
       }
