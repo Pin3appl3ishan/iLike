@@ -8,7 +8,8 @@ import 'package:ilike/features/auth/presentation/pages/login_screen.dart';
 import 'package:ilike/features/home/presentation/pages/home_screen.dart';
 import 'package:ilike/features/profile/presentation/pages/onboarding_page.dart';
 import 'package:ilike/features/profile/presentation/bloc/onboarding/bloc/onboarding_bloc.dart';
-import 'package:ilike/features/profile/presentation/bloc/profile_bloc.dart';
+import 'package:ilike/features/profile/presentation/bloc/profile/profile_bloc.dart';
+import 'package:ilike/core/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,22 +45,9 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'iLike App',
-        theme: ThemeData(
-          fontFamily: 'Poppins',
-          primarySwatch: Colors.pink,
-          scaffoldBackgroundColor: Colors.white,
-          textTheme: const TextTheme(
-            bodyLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-            bodyMedium: TextStyle(fontSize: 16),
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.pink,
-              foregroundColor: Colors.white,
-              textStyle: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-        ),
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.system, 
         initialRoute: '/',
         routes: {
           '/': (_) => const AuthWrapper(),
