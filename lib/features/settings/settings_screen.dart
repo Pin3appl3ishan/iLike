@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../auth/presentation/bloc/auth_bloc.dart';
+import '../../core/utils/widget_utils.dart';
+import 'sensor_demo_screen.dart';
+import 'test_demo_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -51,6 +56,49 @@ class SettingsScreen extends StatelessWidget {
               // TODO: Navigate to About page
             },
           ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.sensors),
+            title: const Text('Sensor Demo'),
+            subtitle: const Text('Location & Accelerometer'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SensorDemoScreen(),
+                ),
+              );
+            },
+          ),
+          const Divider(),
+          // Logout button at the bottom
+          const SizedBox(height: 20),
+          ListTile(
+            leading: const Icon(
+              Icons.logout,
+              color: Colors.red,
+            ),
+            title: const Text(
+              'Logout',
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            onTap: () async {
+              final shouldLogout = await showConfirmationDialog(
+                context,
+                title: 'Logout',
+                content: 'Are you sure you want to logout?',
+              );
+
+              if (shouldLogout == true && context.mounted) {
+                context.read<AuthBloc>().add(LogoutEvent());
+              }
+            },
+          ),
+          const SizedBox(height: 20),
         ],
       ),
     );
