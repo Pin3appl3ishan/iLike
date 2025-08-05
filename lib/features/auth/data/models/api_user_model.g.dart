@@ -17,6 +17,8 @@ ApiUserModel _$ApiUserModelFromJson(Map<String, dynamic> json) => ApiUserModel(
       followers: (json['followers'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList(),
+      token: json['token'] as String?,
+      hasCompletedProfile: json['hasCompletedProfile'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$ApiUserModelToJson(ApiUserModel instance) =>
@@ -28,4 +30,5 @@ Map<String, dynamic> _$ApiUserModelToJson(ApiUserModel instance) =>
       if (instance.avatar case final value?) 'avatar': value,
       if (instance.likes case final value?) 'likes': value,
       if (instance.followers case final value?) 'followers': value,
+      'hasCompletedProfile': instance.hasCompletedProfile,
     };

@@ -3,10 +3,7 @@ import 'package:ilike/features/auth/domain/entities/user_entity.dart';
 
 part 'api_user_model.g.dart';
 
-@JsonSerializable(
-  explicitToJson: true,
-  includeIfNull: false,
-)
+@JsonSerializable(explicitToJson: true, includeIfNull: false)
 class ApiUserModel {
   @JsonKey(name: '_id')
   final String id;
@@ -16,8 +13,10 @@ class ApiUserModel {
   final String? avatar;
   final List<String>? likes;
   final List<String>? followers;
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(includeToJson: false)
   final String? token;
+  @JsonKey(defaultValue: false)
+  final bool hasCompletedProfile;
 
   const ApiUserModel({
     required this.id,
@@ -28,13 +27,14 @@ class ApiUserModel {
     this.likes,
     this.followers,
     this.token,
+    this.hasCompletedProfile = false,
   });
 
-  factory ApiUserModel.fromJson(Map<String, dynamic> json) => 
+  factory ApiUserModel.fromJson(Map<String, dynamic> json) =>
       _$ApiUserModelFromJson(json);
-      
+
   Map<String, dynamic> toJson() => _$ApiUserModelToJson(this);
-  
+
   // Convert API model to domain entity
   UserEntity toEntity({String? password}) {
     return UserEntity(
@@ -43,6 +43,7 @@ class ApiUserModel {
       username: name,
       token: token,
       password: password, // Password is required in UserEntity
+      hasCompletedProfile: hasCompletedProfile, // Use the existing value
     );
   }
 }
