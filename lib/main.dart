@@ -9,6 +9,9 @@ import 'package:ilike/features/home/presentation/pages/home_screen.dart';
 import 'package:ilike/features/profile/presentation/pages/onboarding_page.dart';
 import 'package:ilike/features/profile/presentation/bloc/onboarding/bloc/onboarding_bloc.dart';
 import 'package:ilike/features/profile/presentation/bloc/profile/profile_bloc.dart';
+import 'package:ilike/features/matches/presentation/bloc/match_bloc.dart';
+import 'package:ilike/features/chat/presentation/bloc/chat_bloc.dart';
+import 'package:ilike/features/chat/presentation/pages/chat_screen.dart';
 import 'package:ilike/core/theme/app_theme.dart';
 
 void main() async {
@@ -41,25 +44,33 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider<AuthBloc>(create: (context) => sl<AuthBloc>()),
         BlocProvider<ProfileBloc>(create: (context) => sl<ProfileBloc>()),
+        BlocProvider<MatchBloc>(create: (context) => sl<MatchBloc>()),
+        BlocProvider<ChatBloc>(create: (context) => sl<ChatBloc>()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'iLike App',
         theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.system, 
+        darkTheme: AppTheme.lightTheme, // Force light mode
+        themeMode: ThemeMode.light, // Force light mode
         initialRoute: '/',
         routes: {
           '/': (_) => const AuthWrapper(),
           '/login': (_) => const LoginScreen(),
           '/register': (_) => const RegisterScreen(),
           '/home': (_) => const HomeScreen(),
-          '/onboarding':
-              (_) => BlocProvider<OnboardingBloc>(
+          '/onboarding': (_) => BlocProvider<OnboardingBloc>(
                 create: (_) => sl<OnboardingBloc>()..add(NextStep()),
                 child: const OnboardingPage(),
               ),
           '/main': (_) => const HomeScreen(),
+          '/chat': (context) {
+            final chat = ModalRoute.of(context)!.settings.arguments
+                as Map<String, dynamic>;
+            return Scaffold(
+              body: ChatScreen(chat: chat),
+            );
+          },
         },
       ),
     );
