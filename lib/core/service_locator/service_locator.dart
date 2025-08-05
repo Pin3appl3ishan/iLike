@@ -23,7 +23,7 @@ import 'package:ilike/features/profile/domain/usecases/get_profile_usecase.dart'
 import 'package:ilike/features/profile/domain/usecases/save_profile_usecase.dart';
 import 'package:ilike/features/profile/domain/usecases/update_profile_usecase.dart';
 import 'package:ilike/features/profile/presentation/bloc/onboarding/bloc/onboarding_bloc.dart';
-import 'package:ilike/features/profile/presentation/bloc/profile_bloc.dart';
+import 'package:ilike/features/profile/presentation/bloc/profile/profile_bloc.dart';
 import 'package:ilike/core/network/token_interceptor.dart';
 import 'package:ilike/features/matches/data/datasources/remote_datasource/match_remote_datasource.dart';
 import 'package:ilike/features/matches/data/repositories/match_repository_impl.dart';
@@ -34,6 +34,17 @@ import 'package:ilike/features/matches/domain/usecases/dislike_user_usecase.dart
 import 'package:ilike/features/matches/domain/usecases/get_matches_usecase.dart';
 import 'package:ilike/features/matches/domain/usecases/get_likes_usecase.dart';
 import 'package:ilike/features/matches/presentation/bloc/match_bloc.dart';
+import 'package:ilike/core/network/api_service.dart';
+import 'package:ilike/features/matches/domain/usecases/get_likes_sent_usecase.dart';
+import 'package:ilike/features/chat/data/datasources/chat_remote_data_source.dart';
+import 'package:ilike/features/chat/data/repositories/chat_repository_impl.dart';
+import 'package:ilike/features/chat/domain/repositories/chat_repository.dart';
+import 'package:ilike/features/chat/domain/usecases/get_chats_usecase.dart';
+import 'package:ilike/features/chat/domain/usecases/get_messages_usecase.dart';
+import 'package:ilike/features/chat/domain/usecases/send_message_usecase.dart';
+import 'package:ilike/features/chat/domain/usecases/mark_messages_read_usecase.dart';
+import 'package:ilike/features/chat/presentation/bloc/chat_bloc.dart';
+import 'package:ilike/core/services/sensor_service.dart';
 
 final sl = GetIt.instance;
 
@@ -48,18 +59,24 @@ Future<void> initDependencies() async {
   _initDataSources();
   _initProfileDataSources();
   _initMatchDataSources();
+  _initChatDataSources();
 
   _initRepositories();
   _initProfileRepositories();
   _initMatchRepositories();
+  _initChatRepositories();
 
   _initUseCases();
   _initProfileUseCases();
   _initMatchUseCases();
+  _initChatUseCases();
 
   _initBlocs();
   _initProfileBlocs();
   _initMatchBlocs();
+  _initChatBlocs();
+
+  _initServices();
 }
 
 Future<void> _initHiveService() async {
@@ -96,6 +113,8 @@ void _initNetwork() {
 
     return dio;
   });
+
+  sl.registerLazySingleton<ApiService>(() => ApiService(sl()));
 }
 
 // Repositories
@@ -191,6 +210,8 @@ void _initMatchUseCases() {
   sl.registerLazySingleton<DislikeUserUseCase>(() => DislikeUserUseCase(sl()));
   sl.registerLazySingleton<GetMatchesUseCase>(() => GetMatchesUseCase(sl()));
   sl.registerLazySingleton<GetLikesUseCase>(() => GetLikesUseCase(sl()));
+  sl.registerLazySingleton<GetLikesSentUseCase>(
+      () => GetLikesSentUseCase(sl()));
 }
 
 // Match blocs
@@ -202,6 +223,43 @@ void _initMatchBlocs() {
       dislikeUser: sl(),
       getMatches: sl(),
       getLikes: sl(),
+      getLikesSent: sl(),
+    ),
+  );
+}
+
+// Chat data sources
+void _initChatDataSources() {
+  sl.registerLazySingleton<ChatRemoteDataSource>(
+    () => ChatRemoteDataSourceImpl(sl()),
+  );
+}
+
+// Chat repositories
+void _initChatRepositories() {
+  sl.registerLazySingleton<ChatRepository>(
+    () => ChatRepositoryImpl(sl()),
+  );
+}
+
+// Chat use cases
+void _initChatUseCases() {
+  sl.registerLazySingleton<GetChatsUseCase>(() => GetChatsUseCase(sl()));
+  sl.registerLazySingleton<GetMessagesUseCase>(() => GetMessagesUseCase(sl()));
+  sl.registerLazySingleton<SendMessageUseCase>(() => SendMessageUseCase(sl()));
+  sl.registerLazySingleton<MarkMessagesReadUseCase>(
+      () => MarkMessagesReadUseCase(sl()));
+}
+
+// Chat blocs
+void _initChatBlocs() {
+  sl.registerLazySingleton<ChatBloc>(
+    () => ChatBloc(
+      getChats: sl(),
+      getMessages: sl(),
+      sendMessage: sl(),
+      markMessagesRead: sl(),
+      authBloc: sl<AuthBloc>(),
     ),
   );
 }
@@ -225,4 +283,11 @@ void _initProfileBlocs() {
   sl.registerLazySingleton<ProfileBloc>(
     () => ProfileBloc(getProfile: sl(), updateProfile: sl()),
   );
+}
+
+// Remove the duplicate init() function - it's causing conflicts
+
+// Services
+void _initServices() {
+  sl.registerLazySingleton<SensorService>(() => SensorService());
 }
