@@ -52,22 +52,24 @@ class MatchEntity {
 class MatchUserEntity {
   final String id;
   final String name;
-  final int? age;
-  final String? gender;
-  final String? location;
+  final int age;
+  final String gender;
+  final String location;
   final List<String> photoUrls;
-  final String? bio;
+  final String bio;
   final List<String> interests;
+  final String? profilePicture;
 
   const MatchUserEntity({
     required this.id,
     required this.name,
-    this.age,
-    this.gender,
-    this.location,
+    required this.age,
+    required this.gender,
+    required this.location,
     required this.photoUrls,
-    this.bio,
+    required this.bio,
     required this.interests,
+    this.profilePicture,
   });
 
   MatchUserEntity copyWith({
@@ -79,6 +81,7 @@ class MatchUserEntity {
     List<String>? photoUrls,
     String? bio,
     List<String>? interests,
+    String? profilePicture,
   }) {
     return MatchUserEntity(
       id: id ?? this.id,
@@ -89,6 +92,7 @@ class MatchUserEntity {
       photoUrls: photoUrls ?? this.photoUrls,
       bio: bio ?? this.bio,
       interests: interests ?? this.interests,
+      profilePicture: profilePicture ?? this.profilePicture,
     );
   }
 
@@ -102,6 +106,7 @@ class MatchUserEntity {
       'photoUrls': photoUrls,
       'bio': bio,
       'interests': interests,
+      'profilePicture': profilePicture,
     };
   }
 
@@ -109,12 +114,13 @@ class MatchUserEntity {
     return MatchUserEntity(
       id: json['id'] ?? '',
       name: json['name'] ?? '',
-      age: json['age'],
-      gender: json['gender'],
-      location: json['location'],
+      age: json['age'] ?? 0,
+      gender: json['gender'] ?? '',
+      location: json['location'] ?? '',
       photoUrls: List<String>.from(json['photoUrls'] ?? []),
-      bio: json['bio'],
+      bio: json['bio'] ?? '',
       interests: List<String>.from(json['interests'] ?? []),
+      profilePicture: json['profilePicture'],
     );
   }
 

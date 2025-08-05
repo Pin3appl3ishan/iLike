@@ -9,6 +9,7 @@ class PotentialMatchEntity {
   final List<String> interests;
   final List<String> intentions;
   final String height;
+  final String? profilePicture;
 
   const PotentialMatchEntity({
     required this.id,
@@ -21,6 +22,7 @@ class PotentialMatchEntity {
     required this.interests,
     required this.intentions,
     required this.height,
+    this.profilePicture,
   });
 
   PotentialMatchEntity copyWith({
@@ -34,6 +36,7 @@ class PotentialMatchEntity {
     List<String>? interests,
     List<String>? intentions,
     String? height,
+    String? profilePicture,
   }) {
     return PotentialMatchEntity(
       id: id ?? this.id,
@@ -46,6 +49,7 @@ class PotentialMatchEntity {
       interests: interests ?? this.interests,
       intentions: intentions ?? this.intentions,
       height: height ?? this.height,
+      profilePicture: profilePicture ?? this.profilePicture,
     );
   }
 
@@ -61,6 +65,7 @@ class PotentialMatchEntity {
       'interests': interests,
       'intentions': intentions,
       'height': height,
+      'profilePicture': profilePicture,
     };
   }
 
@@ -76,6 +81,7 @@ class PotentialMatchEntity {
       interests: List<String>.from(json['interests'] ?? []),
       intentions: List<String>.from(json['intentions'] ?? []),
       height: json['height'] ?? '',
+      profilePicture: json['profilePicture'],
     );
   }
 
