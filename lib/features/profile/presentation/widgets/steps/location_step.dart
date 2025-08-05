@@ -19,11 +19,50 @@ class LocationStep extends OnboardingStepWidget {
 
   @override
   Widget buildContent(BuildContext context) {
+    return _LocationStepContent(
+      initialValue: initialValue,
+      onChanged: onChanged,
+    );
+  }
+}
+
+class _LocationStepContent extends StatefulWidget {
+  final String? initialValue;
+  final Function(String) onChanged;
+
+  const _LocationStepContent({
+    required this.onChanged,
+    this.initialValue,
+  });
+
+  @override
+  State<_LocationStepContent> createState() => _LocationStepContentState();
+}
+
+class _LocationStepContentState extends State<_LocationStepContent> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue ?? '');
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: [
         TextField(
-          controller: TextEditingController(text: initialValue),
-          onChanged: onChanged,
+          controller: _controller,
+          onChanged: widget.onChanged,
+          textDirection: TextDirection.ltr,
+          textAlign: TextAlign.left,
           decoration: InputDecoration(
             hintText: 'City, Country',
             filled: true,

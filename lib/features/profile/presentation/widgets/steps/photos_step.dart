@@ -16,14 +16,13 @@ class PhotosStep extends OnboardingStepWidget {
     super.onNext,
     super.onBack,
   }) : super(
-         header: "Upload your best moments",
-         subtext: "Add at least 1 photo to show your vibe (max 5).",
-         canProceed:
-             photos.isNotEmpty &&
-             !photos.any(
-               (url) => url.startsWith('file://'),
-             ), // Check for local file scheme instead
-       );
+          header: "Upload your best moments",
+          subtext: "Add at least 1 photo to show your vibe (max 5).",
+          canProceed: photos.isNotEmpty &&
+              !photos.any(
+                (url) => url.startsWith('/data/') || url.startsWith('/cache/'),
+              ), // Check for local file paths
+        );
 
   // Track uploads in progress to prevent duplicates
   final Set<String> _uploadsInProgress = {};
@@ -48,7 +47,10 @@ class PhotosStep extends OnboardingStepWidget {
                 itemBuilder: (context, index) {
                   if (index < photos.length) {
                     final photo = photos[index];
-                    final bool isUploading = photo.startsWith('file://');
+                    final bool isLocalFile = photo.startsWith('/data/') ||
+                        photo.startsWith('/cache/') ||
+                        photo.startsWith('file://');
+                    final bool isUploading = _uploadsInProgress.contains(photo);
 
                     return Stack(
                       children: [
@@ -56,12 +58,11 @@ class PhotosStep extends OnboardingStepWidget {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
                             image: DecorationImage(
-                              image:
-                                  isUploading
-                                      ? FileImage(
-                                        File(photo.substring(7)),
-                                      ) // Remove file:// prefix
-                                      : NetworkImage(photo) as ImageProvider,
+                              image: isLocalFile
+                                  ? FileImage(File(photo.startsWith('file://')
+                                      ? photo.substring(7)
+                                      : photo))
+                                  : NetworkImage(photo) as ImageProvider,
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -170,7 +171,7 @@ class PhotosStep extends OnboardingStepWidget {
     );
 
     if (image != null) {
-      final localPath = 'file://${image.path}';
+      final localPath = image.path;
 
       // Prevent duplicate uploads
       if (_uploadsInProgress.contains(localPath)) {
@@ -182,15 +183,15 @@ class PhotosStep extends OnboardingStepWidget {
       print('[PhotosStep] Starting upload of: $localPath');
       print('[PhotosStep] Current photos: $photos');
 
-      // Add local path with file:// scheme to indicate upload pending
+      // Add local path to photos list
       final newPhotos = List<String>.from(photos);
       newPhotos.add(localPath);
       onChanged(newPhotos);
 
-      // Upload photo
+      // Upload photo immediately
       try {
         final repository = GetIt.I<IProfileRepository>();
-        final result = await repository.uploadPhoto(image.path);
+        final result = await repository.uploadPhoto(localPath);
 
         result.fold(
           (failure) {

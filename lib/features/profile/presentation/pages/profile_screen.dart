@@ -7,6 +7,7 @@ import 'package:ilike/features/profile/presentation/bloc/profile/profile_event.d
 import 'package:ilike/features/profile/presentation/bloc/profile/profile_state.dart';
 import 'package:ilike/features/profile/presentation/widgets/profile_photo_grid.dart';
 import 'package:ilike/features/profile/presentation/widgets/profile_section.dart';
+import 'package:ilike/features/profile/presentation/pages/edit_profile_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -16,28 +17,6 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late ScrollController _scrollController;
-  bool _isAppBarExpanded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController =
-        ScrollController()..addListener(() {
-          if (_scrollController.hasClients) {
-            setState(() {
-              _isAppBarExpanded = _scrollController.offset > 200;
-            });
-          }
-        });
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ProfileBloc, ProfileState>(
@@ -56,62 +35,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (state is ProfileLoaded) {
           final profile = state.profile;
           return Scaffold(
-            body: CustomScrollView(
-              controller: _scrollController,
-              slivers: [
-                _buildSliverAppBar(profile),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildBasicInfo(profile),
-                        const SizedBox(height: 24),
-                        ProfilePhotoGrid(
-                          photos: profile.photoUrls,
-                          onPhotosChanged: (photos) {
-                            // Handle photo updates
-                            context.read<ProfileBloc>().add(
-                              UpdateProfileEvent(
-                                profile.copyWith(photoUrls: photos),
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 24),
-                        ProfileSection(
-                          title: 'About Me',
-                          content: profile.bio,
-                          icon: Icons.person_outline,
-                          onEdit: () => _editField(context, 'bio', profile),
-                        ),
-                        const SizedBox(height: 16),
-                        ProfileSection(
-                          title: 'Basic Information',
-                          content: _buildBasicInfoText(profile),
-                          icon: Icons.info_outline,
-                          onEdit: () => _editBasicInfo(context, profile),
-                        ),
-                        const SizedBox(height: 16),
-                        ProfileSection(
-                          title: 'Interests',
-                          content: profile.interests.join(', '),
-                          icon: Icons.favorite_border,
-                          onEdit: () => _editInterests(context, profile),
-                        ),
-                        const SizedBox(height: 16),
-                        ProfileSection(
-                          title: 'Looking For',
-                          content: profile.intentions.join(', '),
-                          icon: Icons.search,
-                          onEdit: () => _editIntentions(context, profile),
-                        ),
-                      ],
-                    ),
+            body: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildBasicInfo(profile),
+                  const SizedBox(height: 24),
+                  ProfilePhotoGrid(
+                    photos: profile.photoUrls,
+                    onPhotosChanged: (photos) {
+                      // Handle photo updates
+                      context.read<ProfileBloc>().add(
+                        UpdateProfileEvent(profile.copyWith(photoUrls: photos)),
+                      );
+                    },
                   ),
-                ),
-              ],
+                  const SizedBox(height: 24),
+                  ProfileSection(
+                    title: 'About Me',
+                    content: profile.bio,
+                    icon: Icons.person_outline,
+                    onEdit: () => _editField(context, 'bio', profile),
+                  ),
+                  const SizedBox(height: 16),
+                  ProfileSection(
+                    title: 'Basic Information',
+                    content: _buildBasicInfoText(profile),
+                    icon: Icons.info_outline,
+                    onEdit: () => _editBasicInfo(context, profile),
+                  ),
+                  const SizedBox(height: 16),
+                  ProfileSection(
+                    title: 'Interests',
+                    content: profile.interests.join(', '),
+                    icon: Icons.favorite_border,
+                    onEdit: () => _editInterests(context, profile),
+                  ),
+                  const SizedBox(height: 16),
+                  ProfileSection(
+                    title: 'Looking For',
+                    content: profile.intentions.join(', '),
+                    icon: Icons.search,
+                    onEdit: () => _editIntentions(context, profile),
+                  ),
+                ],
+              ),
             ),
           );
         }
@@ -123,74 +92,140 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildSliverAppBar(ProfileEntity profile) {
-    return SliverAppBar(
-      expandedHeight: 300.0,
-      floating: false,
-      pinned: true,
-      flexibleSpace: FlexibleSpaceBar(
-        title: Text(
-          _isAppBarExpanded ? profile.name : '',
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        background:
-            profile.photoUrls.isNotEmpty
-                ? Image.network(profile.photoUrls[0], fit: BoxFit.cover)
-                : Container(
-                  color: Theme.of(context).primaryColor,
-                  child: const Icon(
-                    Icons.person,
-                    size: 100,
-                    color: Colors.white,
+  Widget _buildBasicInfo(ProfileEntity profile) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Profile Picture and Name/Age Row
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Profile Picture on the left
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.grey.shade300, width: 2),
+              ),
+              child: ClipOval(
+                child:
+                    profile.profilePicture != null &&
+                            profile.profilePicture!.isNotEmpty
+                        ? Image.network(
+                          profile.profilePicture!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return _buildPlaceholderAvatar();
+                          },
+                        )
+                        : _buildPlaceholderAvatar(),
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Name and Age on the same line
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        profile.name,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${profile.age}',
+                        style: Theme.of(
+                          context,
+                        ).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on_outlined,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        profile.location,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Icon(
+                        Icons.height,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        profile.height,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        // Edit Profile Button
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditProfileScreen(profile: profile),
                 ),
-      ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.edit),
-          onPressed: () => _editBasicInfo(context, profile),
+              );
+            },
+            icon: const Icon(Icons.edit, size: 18),
+            label: const Text(
+              'Edit Profile',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE91E63),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildBasicInfo(ProfileEntity profile) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          profile.name,
-          style: Theme.of(
-            context,
-          ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Icon(
-              Icons.location_on_outlined,
-              size: 16,
-              color: Theme.of(context).colorScheme.secondary,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              profile.location,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            const SizedBox(width: 16),
-            Icon(
-              Icons.height,
-              size: 16,
-              color: Theme.of(context).colorScheme.secondary,
-            ),
-            const SizedBox(width: 4),
-            Text(profile.height, style: Theme.of(context).textTheme.bodyLarge),
-          ],
-        ),
-      ],
+  Widget _buildPlaceholderAvatar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        shape: BoxShape.circle,
+      ),
+      child: const Icon(Icons.person, size: 40, color: Colors.grey),
     );
   }
 
