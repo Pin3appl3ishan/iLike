@@ -4,6 +4,7 @@ class UserEntity {
   final String? username;
   final String? token;
   final String? password;
+  final bool? hasCompletedProfile;
 
   const UserEntity({
     this.id,
@@ -11,6 +12,7 @@ class UserEntity {
     this.username,
     this.token,
     this.password,
+    this.hasCompletedProfile,
   });
 
   UserEntity copyWith({
@@ -19,6 +21,7 @@ class UserEntity {
     String? username,
     String? token,
     String? password,
+    bool? hasCompletedProfile,
   }) {
     return UserEntity(
       id: id ?? this.id,
@@ -26,6 +29,7 @@ class UserEntity {
       username: username ?? this.username,
       token: token ?? this.token,
       password: password ?? this.password,
+      hasCompletedProfile: hasCompletedProfile ?? this.hasCompletedProfile,
     );
   }
 }
