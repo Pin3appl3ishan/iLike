@@ -23,8 +23,7 @@ A cross-platform dating app with a shared backend (MongoDB + Node.js), supportin
 - ✅ Swipe-based matching (Tinder-like)
   - ✅ Like / Dislike functionality
   - ✅ Store mutual match in DB
-- 🔶 Random match (Omegle-style)
-  - 🔶 Instant match with any user online
+
 
 ### 💬 Chat
 - ✅ 1-on-1 chat interface
