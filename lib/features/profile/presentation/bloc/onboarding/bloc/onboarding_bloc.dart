@@ -51,6 +51,7 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
             interests: <String>[],
             height: '',
             photoUrls: <String>[],
+            profilePicture: null,
           ),
         ),
       );
@@ -232,7 +233,7 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
           ),
         );
 
-        await saveProfile(
+        final result = await saveProfile(
           name: currentState.data.name,
           gender: currentState.data.gender,
           location: currentState.data.location,
@@ -243,7 +244,21 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
           height: currentState.data.height,
           photoUrls: currentState.data.photoUrls,
         );
-        emit(OnboardingCompleted());
+
+        result.fold(
+          (failure) {
+            emit(OnboardingError(failure.message));
+          },
+          (newToken) async {
+            // Update the stored token if a new one was provided
+            if (newToken != null) {
+              await HiveService.cacheAuthToken(newToken);
+              print(
+                  '[OnboardingBloc] Updated auth token after profile completion');
+            }
+            emit(OnboardingCompleted());
+          },
+        );
       } catch (e) {
         emit(
           OnboardingError('Failed to save onboarding data: ${e.toString()}'),
