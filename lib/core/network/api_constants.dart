@@ -23,7 +23,7 @@ class ApiConstants {
   static const String getProfile = '/users/profile/me';
   static const String setupProfile = '/users/profile/setup';
   static const String updateProfile = '/users/profile/update';
-  static const String uploadPhoto = '/users/profile/upload-photo';
+  static const String uploadPhoto = '/users/profile/upload';
 
   // Match endpoints
   static const String getPotentialMatches = '/matches/potential';
@@ -31,10 +31,14 @@ class ApiConstants {
   static const String dislikeUser = '/matches/like';
   static const String getMatches = '/matches';
   static const String getLikes = '/matches/likes';
+  static const String checkMatch = '/matches/check';
+  static const String likesSent = '/matches/likes-sent';
 
   // Helper methods
   static String likeUserEndpoint(String userId) => '$likeUser/$userId';
   static String dislikeUserEndpoint(String userId) => '$dislikeUser/$userId';
+  static String checkMatchEndpoint(String userId) => '$checkMatch/$userId';
+  static String getMatchByIdEndpoint(String matchId) => '$getMatches/$matchId';
   // Add other API endpoints here as needed
 
   // Headers

@@ -7,8 +7,12 @@ class TokenInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     final token = HiveService.getAuthToken();
+    print('[TokenInterceptor] Token from Hive: $token'); // Debug log
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
+      print('[TokenInterceptor] Added token to request headers'); // Debug log
+    } else {
+      print('[TokenInterceptor] No token found in Hive'); // Debug log
     }
     super.onRequest(options, handler);
   }
