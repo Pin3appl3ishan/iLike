@@ -12,6 +12,7 @@ class PotentialMatchModel extends PotentialMatchEntity {
     required super.interests,
     required super.intentions,
     required super.height,
+    super.profilePicture,
   });
 
   factory PotentialMatchModel.fromJson(Map<String, dynamic> json) {
@@ -26,6 +27,7 @@ class PotentialMatchModel extends PotentialMatchEntity {
       interests: List<String>.from(json['interests'] ?? []),
       intentions: List<String>.from(json['intentions'] ?? []),
       height: json['height'] ?? '',
+      profilePicture: json['profilePicture'],
     );
   }
 
@@ -41,6 +43,7 @@ class PotentialMatchModel extends PotentialMatchEntity {
       'interests': interests,
       'intentions': intentions,
       'height': height,
+      'profilePicture': profilePicture,
     };
   }
 }

@@ -1,17 +1,41 @@
 import 'package:dio/dio.dart';
 import 'package:ilike/core/network/api_constants.dart';
-import 'package:ilike/features/matches/data/models/potential_match_model.dart';
 import 'package:ilike/features/matches/data/models/match_model.dart';
+import 'package:ilike/features/matches/data/models/potential_match_model.dart';
 
-/// All match-related REST calls live here. The implementation relies on a
-/// [Dio] instance that already has the base-url, interceptors and (optionally)
-/// authentication headers configured by the service-locator.
-abstract interface class MatchRemoteDataSource {
+abstract class MatchRemoteDataSource {
+  /// Get potential matches for the current user
+  /// Throws a ServerException for all error codes
   Future<List<PotentialMatchModel>> getPotentialMatches();
+
+  /// Like a user
+  /// Returns true if it's a mutual match
+  /// Throws a ServerException for all error codes
   Future<bool> likeUser(String userId);
-  Future<void> dislikeUser(String userId);
+
+  /// Dislike a user
+  /// Throws a ServerException for all error codes
+  Future<bool> dislikeUser(String userId);
+
+  /// Get all matches for the current user
+  /// Throws a ServerException for all error codes
   Future<List<MatchModel>> getMatches();
+
+  /// Check if it's a mutual match
+  /// Throws a ServerException for all error codes
+  Future<bool> checkMatch(String userId);
+
+  /// Get match by id
+  /// Throws a ServerException for all error codes
+  Future<MatchModel> getMatchById(String matchId);
+
+  /// Get users who have liked the current user
+  /// Throws a ServerException for all error codes
   Future<List<PotentialMatchModel>> getLikes();
+
+  /// Get users that the current user has liked
+  /// Throws a ServerException for all error codes
+  Future<List<PotentialMatchModel>> getLikesSent();
 }
 
 class MatchRemoteDataSourceImpl implements MatchRemoteDataSource {
@@ -49,7 +73,7 @@ class MatchRemoteDataSourceImpl implements MatchRemoteDataSource {
   }
 
   @override
-  Future<void> dislikeUser(String userId) async {
+  Future<bool> dislikeUser(String userId) async {
     final response = await dio.delete(ApiConstants.dislikeUserEndpoint(userId));
 
     if (response.statusCode != 200 || response.data == null) {
@@ -60,6 +84,7 @@ class MatchRemoteDataSourceImpl implements MatchRemoteDataSource {
     if (data['success'] != true) {
       throw Exception(data['message'] ?? 'Failed to dislike user');
     }
+    return true;
   }
 
   @override
@@ -77,6 +102,32 @@ class MatchRemoteDataSourceImpl implements MatchRemoteDataSource {
   }
 
   @override
+  Future<bool> checkMatch(String userId) async {
+    final response = await dio.get(ApiConstants.checkMatchEndpoint(userId));
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = response.data as Map<String, dynamic>;
+      if (data['success'] == true) {
+        return data['isMatch'] ?? false;
+      }
+    }
+    throw Exception('Failed to check match');
+  }
+
+  @override
+  Future<MatchModel> getMatchById(String matchId) async {
+    final response = await dio.get(ApiConstants.getMatchByIdEndpoint(matchId));
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = response.data as Map<String, dynamic>;
+      if (data['success'] == true && data['data'] != null) {
+        return MatchModel.fromJson(data['data']);
+      }
+    }
+    throw Exception('Failed to get match by id');
+  }
+
+  @override
   Future<List<PotentialMatchModel>> getLikes() async {
     final response = await dio.get(ApiConstants.getLikes);
 
@@ -85,10 +136,26 @@ class MatchRemoteDataSourceImpl implements MatchRemoteDataSource {
       if (data['success'] == true && data['data'] != null) {
         final List<dynamic> likesData = data['data'];
         return likesData
-            .map((json) => PotentialMatchModel.fromJson(json))
+            .map((json) => PotentialMatchModel.fromJson(json['user']))
             .toList();
       }
     }
     throw Exception('Failed to get likes');
+  }
+
+  @override
+  Future<List<PotentialMatchModel>> getLikesSent() async {
+    final response = await dio.get(ApiConstants.likesSent);
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = response.data as Map<String, dynamic>;
+      if (data['success'] == true && data['data'] != null) {
+        final List<dynamic> likesSentData = data['data'];
+        return likesSentData
+            .map((json) => PotentialMatchModel.fromJson(json['user']))
+            .toList();
+      }
+    }
+    throw Exception('Failed to get likes sent');
   }
 }

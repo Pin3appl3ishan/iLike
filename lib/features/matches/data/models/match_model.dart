@@ -30,24 +30,26 @@ class MatchUserModel extends MatchUserEntity {
   const MatchUserModel({
     required super.id,
     required super.name,
-    super.age,
-    super.gender,
-    super.location,
+    required super.age,
+    required super.gender,
+    required super.location,
     required super.photoUrls,
-    super.bio,
+    required super.bio,
     required super.interests,
+    super.profilePicture,
   });
 
   factory MatchUserModel.fromJson(Map<String, dynamic> json) {
     return MatchUserModel(
       id: json['id'] ?? '',
       name: json['name'] ?? '',
-      age: json['age'],
-      gender: json['gender'],
-      location: json['location'],
+      age: json['age'] ?? 0,
+      gender: json['gender'] ?? '',
+      location: json['location'] ?? '',
       photoUrls: List<String>.from(json['photoUrls'] ?? []),
-      bio: json['bio'],
+      bio: json['bio'] ?? '',
       interests: List<String>.from(json['interests'] ?? []),
+      profilePicture: json['profilePicture'],
     );
   }
 
@@ -61,6 +63,7 @@ class MatchUserModel extends MatchUserEntity {
       'photoUrls': photoUrls,
       'bio': bio,
       'interests': interests,
+      'profilePicture': profilePicture,
     };
   }
 }
