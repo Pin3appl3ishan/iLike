@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:ilike/features/profile/data/models/profile_model.dart';
 import 'package:dio/dio.dart';
+import 'package:http_parser/http_parser.dart';
 
 /// All profile-related REST calls live here. The implementation relies on a
 /// [Dio] instance that already has the base-url, interceptors and (optionally)
@@ -8,13 +9,15 @@ import 'package:dio/dio.dart';
 abstract interface class ProfileRemoteDataSource {
   Future<ProfileModel?> getProfile(String userId);
 
-  Future<void> createProfile(ProfileModel profile);
+  Future<Map<String, dynamic>> createProfile(ProfileModel profile);
 
   Future<void> updateProfile(ProfileModel profile);
 
   Future<void> deleteProfile(String userId);
 
   Future<String> uploadPhoto(File imageFile);
+
+  Future<String> uploadProfilePicture(File imageFile);
 
   Future<void> deletePhoto(String photoUrl);
 }
@@ -46,8 +49,17 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   }
 
   @override
-  Future<void> createProfile(ProfileModel profile) async {
-    await dio.post('$_profileBase/setup', data: profile.toJson());
+  Future<Map<String, dynamic>> createProfile(ProfileModel profile) async {
+    // Photos are already uploaded individually, so just send profile data as JSON
+    final response =
+        await dio.post('$_profileBase/setup', data: profile.toJson());
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = response.data as Map<String, dynamic>;
+      return data;
+    }
+
+    throw Exception('Invalid response from profile setup');
   }
 
   @override
@@ -62,15 +74,80 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
   @override
   Future<String> uploadPhoto(File imageFile) async {
-    final formData = FormData.fromMap({
-      'file': await MultipartFile.fromFile(imageFile.path),
-    });
-    final response = await dio.post('$_profileBase/upload', data: formData);
-    if (response.statusCode == 200) {
-      final data = response.data as Map<String, dynamic>;
-      return data['url'] as String;
+    try {
+      // Ensure we have a filename with extension
+      String filename = imageFile.path.split('/').last;
+      if (!filename.contains('.')) {
+        filename = '$filename.png'; // Assume PNG for screenshots
+      }
+
+      print('[ProfileRemoteDataSource] Uploading file: $filename');
+      print('[ProfileRemoteDataSource] File path: ${imageFile.path}');
+
+      final formData = FormData.fromMap({
+        'photo': await MultipartFile.fromFile(
+          imageFile.path,
+          filename: filename,
+          contentType: MediaType('image', 'png'), // Explicitly set content type
+        ),
+      });
+
+      // Use the individual upload endpoint for photo uploads during onboarding
+      final response = await dio.post('$_profileBase/upload', data: formData);
+
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data as Map<String, dynamic>;
+        if (data['success'] == true && data['url'] != null) {
+          final String relativeUrl = data['url'] as String;
+          // Use the base URL from Dio configuration instead of hardcoding
+          final baseUrl = dio.options.baseUrl.replaceAll('/api', '');
+          return '$baseUrl$relativeUrl';
+        }
+      }
+      throw Exception('Invalid response format');
+    } catch (e) {
+      print('[ProfileRemoteDataSource] Failed to upload photo: $e');
+      rethrow; // Let the caller handle the error
     }
-    throw Exception('Photo upload failed');
+  }
+
+  @override
+  Future<String> uploadProfilePicture(File imageFile) async {
+    try {
+      // Ensure we have a filename with extension
+      String filename = imageFile.path.split('/').last;
+      if (!filename.contains('.')) {
+        filename = '$filename.png'; // Assume PNG for screenshots
+      }
+
+      print('[ProfileRemoteDataSource] Uploading profile picture: $filename');
+      print('[ProfileRemoteDataSource] File path: ${imageFile.path}');
+
+      final formData = FormData.fromMap({
+        'profilePicture': await MultipartFile.fromFile(
+          imageFile.path,
+          filename: filename,
+          contentType: MediaType('image', 'png'),
+        ),
+      });
+
+      final response = await dio.put('$_profileBase/picture', data: formData);
+
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data as Map<String, dynamic>;
+        if (data['success'] == true && data['data'] != null) {
+          final String relativeUrl =
+              data['data']['profilePictureUrl'] as String;
+          // Use the base URL from Dio configuration instead of hardcoding
+          final baseUrl = dio.options.baseUrl.replaceAll('/api', '');
+          return '$baseUrl$relativeUrl';
+        }
+      }
+      throw Exception('Invalid response format');
+    } catch (e) {
+      print('[ProfileRemoteDataSource] Failed to upload profile picture: $e');
+      rethrow;
+    }
   }
 
   @override

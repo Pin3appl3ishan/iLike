@@ -22,37 +22,72 @@ class ProfileRepositoryImpl implements IProfileRepository {
     try {
       // First try to get from cache
       final cachedProfile = await localDataSource.getCachedProfile();
-      if (cachedProfile != null) {
-        return Right(cachedProfile.toEntity());
+
+      // Try to get from remote
+      try {
+        final remoteProfile = await remoteDataSource.getProfile('');
+        if (remoteProfile != null) {
+          // Update cache with latest data
+          await localDataSource.cacheProfile(remoteProfile);
+          return Right(remoteProfile.toEntity());
+        }
+      } catch (e) {
+        print('[ProfileRepository] Failed to fetch from remote: $e');
+
+        // If it's a 404, return null to indicate no profile exists
+        if (e.toString().contains('404')) {
+          print('[ProfileRepository] Profile not found (404)');
+          // Clear any cached profile since server says none exists
+          await localDataSource.clearProfile();
+          return const Right(null);
+        }
+
+        // For other errors, if we have cache, return cache
+        if (cachedProfile != null) {
+          return Right(cachedProfile.toEntity());
+        }
       }
 
-      // If not in cache, get from remote
-      // final remoteProfile = await remoteDataSource.getProfile(userId);
-      // if (remoteProfile != null) {
-      //   await localDataSource.cacheProfile(remoteProfile);
-      //   return remoteProfile.toEntity();
-      // }
-
-      return Left(CacheFailure('Failed to get profile'));
+      // If both remote and cache fail
+      return const Left(ServerFailure('Failed to get profile'));
     } catch (e) {
-      // Fallback to cache only
-      final cachedProfile = await localDataSource.getCachedProfile();
-      return Right(cachedProfile?.toEntity());
+      return const Left(ServerFailure('An unexpected error occurred'));
     }
   }
 
   @override
-  Future<Either<Failure, void>> saveProfile(ProfileEntity profile) async {
+  Future<Either<Failure, String?>> saveProfile(ProfileEntity profile) async {
     final profileModel = ProfileModel.fromEntity(profile);
 
     try {
+      // Debug log the profile data
+      print('[ProfileRepository] Saving profile data:');
+      print('Name: ${profileModel.name}');
+      print('Gender: ${profileModel.gender}');
+      print('Location: ${profileModel.location}');
+      print('Intentions: ${profileModel.intentions}');
+      print('Age: ${profileModel.age}');
+      print('Bio: ${profileModel.bio}');
+      print('Interests: ${profileModel.interests}');
+      print('Height: ${profileModel.height}');
+      print('PhotoUrls: ${profileModel.photoUrls}');
+      print('Full JSON: ${profileModel.toJson()}');
+
       // Save to remote first
-      await remoteDataSource.createProfile(profileModel);
+      final response = await remoteDataSource.createProfile(profileModel);
+
+      // Extract new token if provided
+      String? newToken;
+      if (response['token'] != null) {
+        newToken = response['token'] as String;
+        print('[ProfileRepository] Received new token: $newToken');
+      }
 
       // Then cache locally
       await localDataSource.cacheProfile(profileModel);
-      return Right(null);
+      return Right(newToken);
     } catch (e) {
+      print('[ProfileRepository] Failed to save profile: $e');
       // If remote fails, at least cache locally
       await localDataSource.cacheProfile(profileModel);
       return Left(ServerFailure('Failed to save profile'));
@@ -98,11 +133,15 @@ class ProfileRepositoryImpl implements IProfileRepository {
   @override
   Future<Either<Failure, String>> uploadPhoto(String imagePath) async {
     try {
-      final file = File(imagePath);
+      // Remove file:// prefix if present
+      final path =
+          imagePath.startsWith('file://') ? imagePath.substring(7) : imagePath;
+
+      final file = File(path);
       final photoUrl = await remoteDataSource.uploadPhoto(file);
       return Right(photoUrl);
     } catch (e) {
-      // For now, return local path as fallback
+      print('[ProfileRepository] Upload failed: $e');
       return Left(NetworkFailure('Failed to upload photo'));
     }
   }
