@@ -29,6 +29,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<RegisterEvent>(_onRegister);
     on<LogoutEvent>(_onLogout);
     on<CheckAuthStatusEvent>(_onCheckAuthStatus);
+    on<UpdateUserEvent>(_onUpdateUser);
+  }
+
+  void _onUpdateUser(UpdateUserEvent event, Emitter<AuthState> emit) {
+    emit(Authenticated(user: event.user));
   }
 
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
@@ -64,18 +69,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       ),
     );
 
-    result.fold((failure) {
-      if (failure is ValidationFailure) {
-        emit(
-          AuthError(
-            message: _mapFailureToMessage(failure),
-            fieldErrors: failure.errors,
-          ),
-        );
-      } else {
-        emit(AuthError(message: _mapFailureToMessage(failure)));
-      }
-    }, (user) => emit(Authenticated(user: user)));
+    result.fold(
+      (failure) {
+        if (failure is ValidationFailure) {
+          emit(
+            AuthError(
+              message: _mapFailureToMessage(failure),
+              fieldErrors: failure.errors,
+            ),
+          );
+        } else {
+          emit(AuthError(message: _mapFailureToMessage(failure)));
+        }
+      },
+      (user) {
+        // Ensure new users always start with hasCompletedProfile set to false
+        final newUser = user.copyWith(hasCompletedProfile: false);
+        emit(Authenticated(user: newUser));
+      },
+    );
   }
 
   Future<void> _onLogout(LogoutEvent event, Emitter<AuthState> emit) async {
