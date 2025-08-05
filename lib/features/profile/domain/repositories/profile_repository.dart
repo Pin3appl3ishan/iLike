@@ -4,7 +4,7 @@ import 'package:dartz/dartz.dart';
 
 abstract interface class IProfileRepository {
   Future<Either<Failure, ProfileEntity?>> getProfile();
-  Future<Either<Failure, void>> saveProfile(ProfileEntity profile);
+  Future<Either<Failure, String?>> saveProfile(ProfileEntity profile);
   Future<Either<Failure, void>> updateProfile(ProfileEntity profile);
   Future<Either<Failure, void>> deleteProfile();
   Future<Either<Failure, String>> uploadPhoto(String imagePath);
