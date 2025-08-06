@@ -1,6 +1,4 @@
-# ilike
-
-A new Flutter project.
+# iLike
 
 ## Getting Started
 
@@ -21,11 +19,13 @@ iLike is a sleek, modern dating app built using Flutter and MongoDB. It’s desi
 | Sprint 3 | Dark/Light Mode, Hive local storage, encorporate clean architecture  | ✅ Completed |
 | Sprint 4 | User Profile, Onboarding, Api development   | ✅ Completed |
 | Sprint 5 | Matchmaking Logic, Matches/Likes page, Testing    | ✅ Completed |
-| Sprint 6 | Real-time Chat, Socket.io or Firebase       | ⏳ Upcoming |
-| Sprint 7 | Final UI Polish, Testing, Deployment        | ⏳ Upcoming |
+| Sprint 6 | Real-time Chat, Socket.io or Firebase       | ✅ Completed |
+| Sprint 7 | Final UI Polish, Testing, Deployment        | ✅ Completed |
 
 ## 🎥 Demo Videos
 
+- [Final Demo Video](https://youtu.be/mmcjWEIOPps)
+  
 - [Sprint 1 Demo](https://youtu.be/j95juPp9d7w)
 - [Sprint 2 Demo](https://youtu.be/H4Yev9rif5Q)
 - [Sprint 3 Demo](https://youtu.be/Uc60R-o47gQ)
